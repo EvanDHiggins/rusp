@@ -1,6 +1,7 @@
 use crate::ast::ASTNode;
 use crate::ast::ASTNode::Expression;
 use crate::ast::ASTNode::Terminal;
+use crate::ast::ASTNode::Program;
 
 use crate::environment::Environment;
 use crate::value::Value;
@@ -19,6 +20,12 @@ pub fn eval(env: &Environment, ast: &ASTNode) -> Result<Value, String>{
                 env, &func_name, &children[1..]).unwrap();
 
             Ok(val)
+        }
+        Program{statements} => {
+            for statement in statements {
+                eval(env, statement)?;
+            }
+            Ok(Value::Unit)
         }
     }
 }

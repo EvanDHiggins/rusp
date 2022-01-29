@@ -45,14 +45,18 @@ fn is_string_literal(s: &str) -> bool {
 }
 
 impl TokenStreamOld {
-    pub fn advance(&mut self) -> Token {
+    pub fn advance(&mut self) -> Option<Token> {
         let tok = self.peek();
-        self.curr += 1;
-        tok
+        if tok.is_some() {
+            self.curr += 1;
+            tok
+        } else {
+            Option::None
+        }
     }
 
-    pub fn peek(&self) -> Token {
-        self.tokens[self.curr].clone()
+    pub fn peek(&self) -> Option<Token> {
+        self.tokens.get(self.curr).map(|t| t.clone())
     }
 
     fn new(tokens: Vec<String>) -> TokenStreamOld {

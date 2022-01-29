@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
 pub struct Value {
     value: String,

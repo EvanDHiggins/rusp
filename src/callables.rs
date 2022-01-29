@@ -1,16 +1,21 @@
 
 use crate::environment::Callable;
+use crate::environment::Environment;
 use crate::value::Value;
+use crate::ast::ASTNode;
+use crate::eval::eval;
 
 pub struct LessThan {}
 pub struct Write {}
 pub struct If {}
 
 impl Callable for LessThan {
-    fn invoke(&self, args: &[Value]) -> Result<Value, &'static str> {
+    fn invoke(
+        &self, env: &Environment, args: &[ASTNode]
+    ) -> Result<Value, &'static str> {
         assert!(args.len() == 2);
-        let lhs = args[0].to_int();
-        let rhs = args[1].to_int();
+        let lhs = eval(env, &args[0]).unwrap().to_int().unwrap();
+        let rhs = eval(env, &args[1]).unwrap().to_int().unwrap();
         if lhs < rhs {
             Ok(Value::new("true"))
         } else {
@@ -20,23 +25,23 @@ impl Callable for LessThan {
 }
 
 impl Callable for Write {
-    fn invoke(&self, args: &[Value]) -> Result<Value, &'static str> {
+    fn invoke(&self, env: &Environment, args: &[ASTNode]) -> Result<Value, &'static str> {
         assert!(args.len() == 1);
-        println!("{}", args[0].to_string());
+        println!("{}", eval(env, &args[0]).unwrap().to_string());
         Ok(Value::new(""))
     }
 }
 
 impl Callable for If {
-    fn invoke(&self, args: &[Value]) -> Result<Value, &'static str> {
+    fn invoke(
+        &self, env: &Environment, args: &[ASTNode]
+    ) -> Result<Value, &'static str> {
         assert!(args.len() == 3);
-        let condition = args[0].to_bool().unwrap();
-        let if_true = args[1].clone();
-        let if_false = args[2].clone();
+        let condition = eval(env, &args[0]).unwrap().to_bool().unwrap();
         if condition {
-            Ok(if_true)
+            Ok(eval(env, &args[1]).unwrap().clone())
         } else {
-            Ok(if_false)
+            Ok(eval(env, &args[2]).unwrap().clone())
         }
     }
 }

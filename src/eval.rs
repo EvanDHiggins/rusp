@@ -12,16 +12,16 @@ pub fn eval(env: &Environment, ast: &ASTNode) -> Result<Value, &'static str>{
         }
         Expression{children} => {
             let func_name = eval(env, &children[0]).unwrap();
-            let args: Vec<Value> = children[1..].into_iter()
-                .map(|ast| eval(env, ast).unwrap()).collect();
-            let val = eval_function(env, func_name, &args).unwrap();
+            //let args: Vec<Value> = children[1..].into_iter()
+                //.map(|ast| eval(env, ast).unwrap()).collect();
+            let val = eval_function(env, func_name, &children[1..]).unwrap();
 
             Ok(val)
         }
     }
 }
 
-fn eval_function(env: &Environment, name: Value, args: &[Value])
+fn eval_function(env: &Environment, name: Value, args: &[ASTNode])
     -> Result<Value, &'static str> {
-    env.get(name).invoke(args)
+    env.get(name).invoke(env, args)
 }

@@ -1,8 +1,11 @@
 use std::collections::HashMap;
 use crate::value::Value;
+use crate::ast::ASTNode;
 
 pub trait Callable {
-    fn invoke(&self, args: &[Value]) -> Result<Value, &'static str>;
+    fn invoke(
+        &self, env: &Environment, args: &[ASTNode]
+    ) -> Result<Value, &'static str>;
 }
 
 pub struct Environment {

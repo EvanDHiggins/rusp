@@ -15,22 +15,6 @@ pub enum Token {
     Id(String),
 }
 
-//struct TokenError {
-    //idx: usize
-//}
-
-//impl fmt::Display for TokenError {
-    //fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        //write!(f, "Could not parse token at index {}", self.idx)
-    //}
-//}
-
-//impl From<TokenError> for std::io::Error {
-    //fn from(tokenError: TokenError) -> Self {
-        //std::io::Error::new("asdf")
-    //}
-//}
-
 impl Token {
     fn from_string(str_tok: &str) -> Token {
         if str_tok == "(" {
@@ -82,7 +66,6 @@ fn is_string_literal(s: &str) -> bool {
 }
 
 
-//pub fn tokenize(s: &str) -> Result<TokenStream, TokenError> {
 pub fn tokenize(s: &str) -> TokenStream {
     TokenStream::new(s.replace('(', " ( ")
      .replace(')', " ) ")

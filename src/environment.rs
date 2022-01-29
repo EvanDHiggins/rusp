@@ -2,26 +2,46 @@ use std::collections::HashMap;
 use crate::value::Value;
 use crate::ast::ASTNode;
 
-pub trait Callable {
+pub trait LazyEvaluationCallable {
     fn invoke(
         &self, env: &Environment, args: &[ASTNode]
-    ) -> Result<Value, &'static str>;
+    ) -> Result<Value, String>;
+}
+
+pub trait Callable {
+    fn invoke(
+        &self, env: &Environment, args: &[Value]
+    ) -> Result<Value, String>;
 }
 
 pub struct Environment {
-    value_map: HashMap<Value, Box<dyn Callable>>
+    value_map: HashMap<Value, Box<dyn Callable>>,
+    lazy_evaluation_map: HashMap<Value, Box<dyn LazyEvaluationCallable>>
 }
 
 impl Environment {
     pub fn new() -> Environment {
-        Environment{value_map: HashMap::new()}
+        Environment{
+            value_map: HashMap::new(),
+            lazy_evaluation_map: HashMap::new()
+        }
     }
 
-    pub fn get(&self, name: Value) -> &Box<dyn Callable> {
-        self.value_map.get(&name).unwrap()
+    pub fn get(&self, name: &Value) -> Option<&Box<dyn Callable>> {
+        self.value_map.get(&name)
     }
 
-    pub fn add(&mut self, name: Value, func: Box<dyn Callable>) {
+    pub fn insert(&mut self, name: Value, func: Box<dyn Callable>) {
         self.value_map.insert(name, func);
+    }
+
+    pub fn get_lazy_evaluated(
+        &self, name: &Value) -> Option<&Box<dyn LazyEvaluationCallable>> {
+        self.lazy_evaluation_map.get(&name)
+    }
+
+    pub fn insert_lazy_evaluated(
+        &mut self, name: Value, func: Box<dyn LazyEvaluationCallable>) {
+        self.lazy_evaluation_map.insert(name, func);
     }
 }

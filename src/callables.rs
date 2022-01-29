@@ -1,5 +1,6 @@
 
 use crate::environment::Callable;
+use crate::environment::LazyEvaluationCallable;
 use crate::environment::Environment;
 use crate::value::Value;
 use crate::ast::ASTNode;
@@ -11,31 +12,40 @@ pub struct If {}
 
 impl Callable for LessThan {
     fn invoke(
-        &self, env: &Environment, args: &[ASTNode]
-    ) -> Result<Value, &'static str> {
+        &self, env: &Environment, args: &[Value]
+    ) -> Result<Value, String> {
         assert!(args.len() == 2);
-        let lhs = eval(env, &args[0]).unwrap().to_int().unwrap();
-        let rhs = eval(env, &args[1]).unwrap().to_int().unwrap();
-        if lhs < rhs {
-            Ok(Value::new("true"))
-        } else {
-            Ok(Value::new("false"))
+        let lhs = &args[0];
+        let rhs = &args[1];
+        match (lhs, rhs) {
+            (Value::Int(lhs_val), Value::Int(rhs_val)) => {
+                Ok(Value::Boolean(lhs_val < rhs_val))
+            }
+            _ => Err(
+                format!(
+                    "Expected both args to '<' to be integers. \
+                     Found {:?} and {:?}.", lhs, rhs))
         }
     }
 }
 
 impl Callable for Write {
-    fn invoke(&self, env: &Environment, args: &[ASTNode]) -> Result<Value, &'static str> {
+    fn invoke(&self, env: &Environment, args: &[Value]) -> Result<Value, String> {
         assert!(args.len() == 1);
-        println!("{}", eval(env, &args[0]).unwrap().to_string());
-        Ok(Value::new(""))
+        let arg = &args[0];
+        if let Value::Str(v) = arg {
+            println!("{}", v);
+            Ok(Value::Unit)
+        } else {
+            Err(format!("Could not print value: {:?}", arg))
+        }
     }
 }
 
-impl Callable for If {
+impl LazyEvaluationCallable for If {
     fn invoke(
         &self, env: &Environment, args: &[ASTNode]
-    ) -> Result<Value, &'static str> {
+    ) -> Result<Value, String> {
         assert!(args.len() == 3);
         let condition = eval(env, &args[0]).unwrap().to_bool().unwrap();
         if condition {

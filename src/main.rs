@@ -20,9 +20,9 @@ fn main() -> std::io::Result<()> {
     let mut tokens = tokenize(&contents);
     let ast = parse(&mut tokens).unwrap();
     let mut env = environment::Environment::new();
-    env.add(Value::new("<"), Box::new(callables::LessThan{}));
-    env.add(Value::new("if"), Box::new(callables::If{}));
-    env.add(Value::new("write"), Box::new(callables::Write{}));
+    env.insert(Value::make_id("<"), Box::new(callables::LessThan{}));
+    env.insert_lazy_evaluated(Value::make_id("if"), Box::new(callables::If{}));
+    env.insert(Value::make_id("write"), Box::new(callables::Write{}));
     eval(&env, &ast);
     Ok(())
 }

@@ -12,7 +12,7 @@ pub struct If {}
 
 impl Callable for LessThan {
     fn invoke(
-        &self, env: &Environment, args: &[Value]
+        &self, _env: &Environment, args: &[Value]
     ) -> Result<Value, String> {
         assert!(args.len() == 2);
         let lhs = &args[0];
@@ -30,7 +30,7 @@ impl Callable for LessThan {
 }
 
 impl Callable for Write {
-    fn invoke(&self, env: &Environment, args: &[Value]) -> Result<Value, String> {
+    fn invoke(&self, _env: &Environment, args: &[Value]) -> Result<Value, String> {
         assert!(args.len() == 1);
         let arg = &args[0];
         if let Value::Str(v) = arg {

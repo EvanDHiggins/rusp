@@ -1,7 +1,5 @@
-use std::fmt;
-
 #[derive(Debug)]
-pub struct TokenStream {
+pub struct TokenStreamOld {
     curr: usize,
     tokens: Vec<Token>
 }
@@ -33,25 +31,6 @@ impl Token {
     }
 }
 
-impl TokenStream {
-    pub fn advance(&mut self) -> Token {
-        let tok = self.peek();
-        self.curr += 1;
-        tok
-    }
-
-    pub fn peek(&self) -> Token {
-        self.tokens[self.curr].clone()
-    }
-
-    fn new(tokens: Vec<String>) -> TokenStream {
-        TokenStream{
-            curr: 0,
-            tokens: tokens.iter().map(|s| Token::from_string(s)).collect()
-        }
-    }
-}
-
 fn is_integer(s: &str) -> bool {
     s.parse::<i64>().is_ok()
 }
@@ -65,9 +44,27 @@ fn is_string_literal(s: &str) -> bool {
     begins_with_quote && ends_with_quote
 }
 
+impl TokenStreamOld {
+    pub fn advance(&mut self) -> Token {
+        let tok = self.peek();
+        self.curr += 1;
+        tok
+    }
 
-pub fn tokenize(s: &str) -> TokenStream {
-    TokenStream::new(s.replace('(', " ( ")
+    pub fn peek(&self) -> Token {
+        self.tokens[self.curr].clone()
+    }
+
+    fn new(tokens: Vec<String>) -> TokenStreamOld {
+        TokenStreamOld{
+            curr: 0,
+            tokens: tokens.iter().map(|s| Token::from_string(s)).collect()
+        }
+    }
+}
+
+pub fn tokenize(s: &str) -> TokenStreamOld {
+    TokenStreamOld::new(s.replace('(', " ( ")
      .replace(')', " ) ")
      .split_whitespace()
      .map(|st| st.to_owned()).collect())

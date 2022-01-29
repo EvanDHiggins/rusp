@@ -1,4 +1,4 @@
-use crate::tokenize::TokenStream;
+use crate::tokenize::TokenStreamOld;
 use crate::tokenize::Token;
 
 #[derive(Debug)]
@@ -7,7 +7,7 @@ pub enum ASTNode {
     Expression { children: Vec<ASTNode> },
 }
 
-pub fn parse(tokens: &mut TokenStream) -> Result<ASTNode, &'static str> {
+pub fn parse(tokens: &mut TokenStreamOld) -> Result<ASTNode, &'static str> {
     let next_tok = tokens.advance();
     if next_tok == Token::OpenParen {
         let mut nodes = Vec::new();

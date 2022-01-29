@@ -13,6 +13,11 @@ pub enum Token {
     Id(String),
 }
 
+pub trait TokenStream {
+    fn advance(&mut self) -> Option<Token>;
+    fn peek(&self) -> Option<Token>;
+}
+
 impl Token {
     fn from_string(str_tok: &str) -> Token {
         if str_tok == "(" {
@@ -31,6 +36,31 @@ impl Token {
     }
 }
 
+pub struct LazyTokenStream {
+    input: String,
+    curr: usize,
+}
+
+impl TokenStream for LazyTokenStream {
+    fn advance(&mut self) -> Option<Token> {
+        Option::None
+    }
+
+    fn peek(&self) -> Option<Token> {
+        Option::None
+    }
+}
+
+impl LazyTokenStream {
+    pub fn new(input: &str) -> LazyTokenStream {
+        LazyTokenStream{input: input.to_owned(), curr: 0}
+    }
+}
+
+pub fn tokenize(s: &str) -> LazyTokenStream {
+    LazyTokenStream::new(s)
+}
+
 fn is_integer(s: &str) -> bool {
     s.parse::<i64>().is_ok()
 }
@@ -42,11 +72,6 @@ fn is_string_literal(s: &str) -> bool {
         s.chars().last().map(|c| c == '"').filter(|&b| b).is_some();
 
     begins_with_quote && ends_with_quote
-}
-
-pub trait TokenStream {
-    fn advance(&mut self) -> Option<Token>;
-    fn peek(&self) -> Option<Token>;
 }
 
 impl TokenStream for NaiveTokenStream {
@@ -75,9 +100,9 @@ impl NaiveTokenStream {
     }
 }
 
-pub fn tokenize(s: &str) -> Box<dyn TokenStream> {
-    Box::new(NaiveTokenStream::new(s.replace('(', " ( ")
+pub fn naive_tokenize(s: &str) -> NaiveTokenStream {
+    NaiveTokenStream::new(s.replace('(', " ( ")
      .replace(')', " ) ")
      .split_whitespace()
-     .map(|st| st.to_owned()).collect()))
+     .map(|st| st.to_owned()).collect())
 }

@@ -1,5 +1,5 @@
 #[derive(Debug)]
-pub struct TokenStreamOld {
+pub struct NaiveTokenStream {
     curr: usize,
     tokens: Vec<Token>
 }
@@ -44,8 +44,13 @@ fn is_string_literal(s: &str) -> bool {
     begins_with_quote && ends_with_quote
 }
 
-impl TokenStreamOld {
-    pub fn advance(&mut self) -> Option<Token> {
+pub trait TokenStream {
+    fn advance(&mut self) -> Option<Token>;
+    fn peek(&self) -> Option<Token>;
+}
+
+impl TokenStream for NaiveTokenStream {
+    fn advance(&mut self) -> Option<Token> {
         let tok = self.peek();
         if tok.is_some() {
             self.curr += 1;
@@ -55,21 +60,24 @@ impl TokenStreamOld {
         }
     }
 
-    pub fn peek(&self) -> Option<Token> {
+    fn peek(&self) -> Option<Token> {
         self.tokens.get(self.curr).map(|t| t.clone())
     }
 
-    fn new(tokens: Vec<String>) -> TokenStreamOld {
-        TokenStreamOld{
+}
+
+impl NaiveTokenStream {
+    fn new(tokens: Vec<String>) -> NaiveTokenStream {
+        NaiveTokenStream{
             curr: 0,
             tokens: tokens.iter().map(|s| Token::from_string(s)).collect()
         }
     }
 }
 
-pub fn tokenize(s: &str) -> TokenStreamOld {
-    TokenStreamOld::new(s.replace('(', " ( ")
+pub fn tokenize(s: &str) -> Box<dyn TokenStream> {
+    Box::new(NaiveTokenStream::new(s.replace('(', " ( ")
      .replace(')', " ) ")
      .split_whitespace()
-     .map(|st| st.to_owned()).collect())
+     .map(|st| st.to_owned()).collect()))
 }

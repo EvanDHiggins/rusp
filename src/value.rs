@@ -22,7 +22,7 @@ impl std::fmt::Debug for Value {
             Value::Str(s) => dbs.field("String", s),
             Value::Function(_) => dbs.field("Function", &"<No Name>"),
             Value::LazyFunction(_) => dbs.field("LazyFunction", &"<No Name>"),
-            Unit => dbs.field("Unit", &"")
+            Value::Unit => dbs.field("Unit", &"")
         }.finish()
     }
 }

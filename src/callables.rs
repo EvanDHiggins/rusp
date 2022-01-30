@@ -65,7 +65,7 @@ impl Callable for Write {
 
 impl LazyEvaluationCallable for Lambda {
     fn invoke(
-        &self, env: &Environment, args: &[ASTNode]
+        &self, _env: &Environment, _args: &[ASTNode]
     ) -> Result<Value, String> {
         // Produce a Value which is invokable and has an extended environment
         // s.t. any Id values in args[1] bind values to the environment

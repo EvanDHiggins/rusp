@@ -1,1 +1,3 @@
-(let x 1 (write (if (< x 2) "less than!" "greater than!")))
+(let x 4 
+  (let y 2
+    (write (if (< x y) "less than!" "greater than!")))

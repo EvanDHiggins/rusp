@@ -15,7 +15,15 @@ pub enum Value {
 impl std::fmt::Debug for Value {
     fn fmt(
         &self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        Ok(())
+        let mut dbs = f.debug_struct("value::Value");
+        match self {
+            Value::Int(i) => dbs.field("i64", i),
+            Value::Boolean(b) => dbs.field("bool", b),
+            Value::Str(s) => dbs.field("String", s),
+            Value::Function(_) => dbs.field("Function", &"<No Name>"),
+            Value::LazyFunction(_) => dbs.field("LazyFunction", &"<No Name>"),
+            Unit => dbs.field("Unit", &"")
+        }.finish()
     }
 }
 

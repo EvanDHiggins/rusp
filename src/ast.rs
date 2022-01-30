@@ -7,6 +7,7 @@ use crate::error::InterpreterError;
 pub enum ASTNode {
     Terminal { token: Token },
     Expression { children: Vec<ASTNode> },
+    Identifier { name: String },
     Program { statements: Vec<ASTNode> },
 }
 
@@ -46,14 +47,16 @@ pub fn parse_expr(tokens: &mut dyn TokenStream) -> Result<ASTNode, ParseError> {
     let next_tok = tokens.advance()?.ok_or_else(||
         ParseError::new(
             "Attempted to read next token, but there are none left."))?;
-    if next_tok == Token::OpenParen {
+    if let Token::OpenParen = next_tok {
         let mut nodes = Vec::new();
         while tokens.peek()?.is_some()
             && tokens.peek()?.unwrap() != Token::CloseParen {
-            nodes.push(parse_expr(tokens).unwrap());
+            nodes.push(parse_expr(tokens)?);
         }
         tokens.advance()?; // Strip off trailing ')'
         Ok(ASTNode::Expression{children: nodes})
+    } else if let Token::Id(identifier) = next_tok {
+        Ok(ASTNode::Identifier{name: identifier})
     } else {
         Ok(ASTNode::Terminal{token: next_tok})
     }

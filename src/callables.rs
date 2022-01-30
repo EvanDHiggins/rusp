@@ -9,6 +9,7 @@ use crate::eval::eval;
 pub struct LessThan {}
 pub struct Write {}
 pub struct If {}
+pub struct Lambda {}
 
 impl Callable for LessThan {
     fn invoke(
@@ -42,16 +43,30 @@ impl Callable for Write {
     }
 }
 
+impl LazyEvaluationCallable for Lambda {
+    fn invoke(
+        &self, env: &Environment, args: &[ASTNode]
+    ) -> Result<Value, String> {
+        // Produce a Value which is invokable and has an extended environment
+        // s.t. any Id values in args[1] bind values to the environment
+        // when called
+        Ok(Value::Str("".to_owned()))
+    }
+}
+
 impl LazyEvaluationCallable for If {
     fn invoke(
         &self, env: &Environment, args: &[ASTNode]
     ) -> Result<Value, String> {
         assert!(args.len() == 3);
-        let condition = eval(env, &args[0]).unwrap().to_bool().unwrap();
-        if condition {
-            Ok(eval(env, &args[1]).unwrap())
+        if let Value::Boolean(condition) = eval(env, &args[0])? {
+            if condition {
+                Ok(eval(env, &args[1]).unwrap())
+            } else {
+                Ok(eval(env, &args[2]).unwrap())
+            }
         } else {
-            Ok(eval(env, &args[2]).unwrap())
+            Err(String::from("Could not evaluate value as bool."))
         }
     }
 }

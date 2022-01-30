@@ -10,7 +10,6 @@ mod callables;
 mod error;
 
 
-use tokenize::naive_tokenize;
 use tokenize::tokenize;
 use ast::parse;
 use eval::eval;
@@ -19,8 +18,7 @@ use value::Value;
 fn main() -> Result<(), error::InterpreterError> {
     let contents = fs::read_to_string(env::args().nth(1).unwrap())?;
 
-    let mut token_stream = tokenize(&contents)?;
-    let mut tokens = naive_tokenize(&contents);
+    let mut tokens = tokenize(&contents)?;
     let ast = parse(&mut tokens).unwrap();
     let mut env = environment::Environment::new();
     env.insert(Value::make_id("<"), Box::new(callables::LessThan{}));

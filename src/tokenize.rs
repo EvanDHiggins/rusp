@@ -1,3 +1,5 @@
+use crate::error::InterpreterError;
+
 #[derive(Debug)]
 pub struct NaiveTokenStream {
     curr: usize,
@@ -39,6 +41,23 @@ impl Token {
 pub struct LazyTokenStream {
     input: String,
     curr: usize,
+    next_token: Option<Token>,
+}
+
+pub struct TokenError {
+    message: String,
+}
+
+impl From<TokenError> for InterpreterError {
+    fn from(token_error: TokenError) -> InterpreterError {
+        InterpreterError::new("Tokenization Error", &token_error.message)
+    }
+}
+
+impl TokenError {
+    fn new(message: String) -> TokenError {
+        TokenError{message: message}
+    }
 }
 
 impl TokenStream for LazyTokenStream {
@@ -51,13 +70,31 @@ impl TokenStream for LazyTokenStream {
     }
 }
 
+
+
 impl LazyTokenStream {
-    pub fn new(input: &str) -> LazyTokenStream {
-        LazyTokenStream{input: input.to_owned(), curr: 0}
+    pub fn new(input: &str) -> Result<LazyTokenStream, TokenError> {
+        LazyTokenStream{
+            input: input.to_owned(),
+            curr: 0,
+            next_token: Option::None
+        }.init()
+    }
+
+    fn init(mut self) -> Result<LazyTokenStream, TokenError> {
+        if self.input.as_bytes()[self.curr] != ('(' as u8) {
+            Err(TokenError::new(format!(
+                    "Expected program to begin with '('. Found {} instead.",
+                    self.input.as_bytes()[self.curr])))
+        } else {
+            self.curr += 1;
+            self.next_token = Some(Token::OpenParen);
+            Ok(self)
+        }
     }
 }
 
-pub fn tokenize(s: &str) -> LazyTokenStream {
+pub fn tokenize(s: &str) -> Result<LazyTokenStream, TokenError> {
     LazyTokenStream::new(s)
 }
 

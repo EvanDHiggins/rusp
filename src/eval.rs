@@ -39,7 +39,10 @@ fn eval_expect_callable(env: &Environment, arg: &ASTNode) -> Result<Value, Strin
     if value.is_callable() {
         Ok(value)
     } else {
-        Err(String::from("First argument to function call is not a function value."))
+        Err(
+            format!(
+                "First argument, {:?} to function call is not a \
+                 function value.", arg))
     }
 }
 

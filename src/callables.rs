@@ -9,6 +9,7 @@ use crate::eval::eval;
 pub struct LessThan {}
 pub struct Write {}
 pub struct If {}
+pub struct Let {}
 pub struct Lambda {}
 
 impl Callable for LessThan {
@@ -26,6 +27,25 @@ impl Callable for LessThan {
                 format!(
                     "Expected both args to '<' to be integers. \
                      Found {:?} and {:?}.", lhs, rhs))
+        }
+    }
+}
+
+impl LazyEvaluationCallable for Let {
+    fn invoke(
+        &self, env: &Environment, args: &[ASTNode]
+    ) -> Result<Value, String> {
+        // Expect (let <Id> <Value> <body>)
+        assert!(args.len() == 3);
+        let id_node = &args[0];
+        let bound_value = eval(env, &args[1])?;
+        let body_node = &args[2];
+
+        if let ASTNode::Identifier{name} = id_node {
+            let new_env = env.extend(name, bound_value);
+            eval(&new_env, body_node)
+        } else {
+            Err(String::from(""))
         }
     }
 }

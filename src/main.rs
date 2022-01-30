@@ -25,6 +25,7 @@ fn main() -> Result<(), error::InterpreterError> {
     env.insert("<", Value::Function(Rc::new(callables::LessThan{})));
     env.insert("write", Value::Function(Rc::new(callables::Write{})));
     env.insert("if", Value::LazyFunction(Rc::new(callables::If{})));
+    env.insert("let", Value::LazyFunction(Rc::new(callables::Let{})));
     eval(&env, &ast)?;
     Ok(())
 }

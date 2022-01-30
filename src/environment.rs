@@ -20,16 +20,15 @@ pub trait LazyEvaluationCallable {
     ) -> Result<Value, String>;
 }
 
+#[derive(Clone)]
 pub struct Environment {
     value_map: HashMap<String, Value>,
-    lazy_evaluation_map: HashMap<String, Value>
 }
 
 impl Environment {
     pub fn new() -> Environment {
         Environment{
-            value_map: HashMap::new(),
-            lazy_evaluation_map: HashMap::new()
+            value_map: HashMap::new()
         }
     }
 
@@ -38,18 +37,13 @@ impl Environment {
         self.value_map.get(name)
     }
 
-    pub fn insert(&mut self, name: &str, func: Value) {
-        self.value_map.insert(String::from(name), func);
+    pub fn insert(&mut self, name: &str, value: Value) {
+        self.value_map.insert(String::from(name), value);
     }
 
-    #[allow(clippy::borrowed_box)]
-    pub fn get_lazy_evaluated(
-        &self, name: &str) -> Option<&Value> {
-        self.lazy_evaluation_map.get(name)
-    }
-
-    pub fn insert_lazy_evaluated(
-        &mut self, name: &str, func: Value) {
-        self.lazy_evaluation_map.insert(String::from(name), func);
+    pub fn extend(&self, name: &str, v: Value) -> Environment {
+        let mut new_env = self.clone();
+        new_env.insert(name, v);
+        new_env
     }
 }

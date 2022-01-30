@@ -18,12 +18,6 @@ pub fn lex(s: &str) -> Result<LazyTokenStream, TokenError> {
     LazyTokenStream::new(s)
 }
 
-pub struct LazyTokenStream {
-    input: String,
-    curr: usize,
-    next_token: Option<Token>,
-}
-
 #[derive(Debug)]
 pub struct TokenError {
     pub message: String,
@@ -53,6 +47,12 @@ impl TokenError {
     }
 }
 
+pub struct LazyTokenStream {
+    input: Vec<char>,
+    curr: usize,
+    next_token: Option<Token>,
+}
+
 impl TokenStream for LazyTokenStream {
     fn advance(&mut self) -> Result<Option<Token>, TokenError> {
         if self.next_token.is_some() {
@@ -76,10 +76,22 @@ fn is_identifier_char(c: char) -> bool {
 impl LazyTokenStream {
     pub fn new(input: &str) -> Result<LazyTokenStream, TokenError> {
         LazyTokenStream{
-            input: String::from(input),
+            input: input.chars().collect(),
             curr: 0,
             next_token: Option::None
         }.init()
+    }
+
+    fn init(mut self) -> Result<LazyTokenStream, TokenError> {
+        if self.input[self.curr] != ('(' as char) {
+            Err(TokenError::new(format!(
+                    "Expected program to begin with '('. Found {} instead.",
+                    self.input[self.curr])))
+        } else {
+            self.curr += 1;
+            self.next_token = Some(Token::OpenParen);
+            Ok(self)
+        }
     }
 
     fn consume_token_from_input(&mut self) 
@@ -89,44 +101,24 @@ impl LazyTokenStream {
             return Ok(Option::None);
         }
         let curr_char = self.curr_char();
-        self.curr += 1;
         if curr_char == '(' {
+            self.curr += 1;
             Ok(Some(Token::OpenParen))
         } else if curr_char == ')' {
+            self.curr += 1;
             Ok(Some(Token::CloseParen))
         } else if curr_char == '"' {
             self.consume_string().map(Some)
         } else if curr_char.is_ascii_digit() {
-            self.curr -= 1; // backtrack to include this digit.
             self.consume_integer().map(Some)
         } else {
-            self.curr -= 1;
             self.consume_identifier().map(Some)
         }
 
     }
 
-    fn consume_identifier(&mut self) -> Result<Token, TokenError> {
-        let start = self.curr;
-        let first_non_id_idx =
-            self.input.as_bytes()[self.curr..]
-                .into_iter().position(|c| !is_identifier_char(*c as char));
-        if first_non_id_idx.is_none() {
-            return Err(TokenError::new(
-                format!(
-                    "Could not find end of identifier starting \
-                     at index = {}", start)));
-        };
-        let end_idx = start + first_non_id_idx.unwrap();
-        self.curr += first_non_id_idx.unwrap();
-
-        let identifier =
-            std::str::from_utf8(&self.input.as_bytes()[start..end_idx])?;
-        Ok(Token::Id(String::from(identifier)))
-    }
-
     fn stream_active(&self) -> bool {
-        self.curr < self.input.as_bytes().len()
+        self.curr < self.input.len()
     }
 
     fn consume_whitespace(&mut self){
@@ -136,49 +128,49 @@ impl LazyTokenStream {
     }
 
     fn curr_char(&self) -> char {
-        self.input.as_bytes()[self.curr] as char
+        self.input[self.curr]
+    }
+
+    fn consume_while<F>(&mut self, desc: &str, func: F) -> Result<String, TokenError>
+        where F: FnMut(&char) -> bool
+    {
+        let first_failure = self.input[self.curr..]
+            .iter().position(func);
+        match first_failure {
+            Option::None =>
+                Err(TokenError::new(format!(
+                    "Ran out of input searching for {} at index {}.",
+                    desc, self.curr))),
+            Option::Some(idx) => {
+
+                let start = self.curr;
+                let end = self.curr + idx;
+                self.curr = end;
+                Ok(self.input[start..end].iter().collect::<String>())
+            }
+        }
     }
 
     fn consume_string(&mut self) -> Result<Token, TokenError> {
-        let next_quote_idx =
-            self.input.as_bytes()[self.curr..]
-                .into_iter().position(|c| (*c as char) == '"');
-        if next_quote_idx.is_none() {
-            return Err(
-                TokenError::new(format!(
-                    "Could not find closing quote to match \
-                     the quote found at index = {}", self.curr)));
-        }
-        let end_idx = self.curr + next_quote_idx.unwrap();
-        let start = self.curr;
-        self.curr = end_idx + 1;
-        let literal: String =
-            self.input.chars().skip(start).take(end_idx - start).collect();
+        self.curr += 1;
+        let literal = self.consume_while("[String]", |c| {
+            *c == '"'
+        })?;
+        self.curr += 1; // Remove the '"' that we know exists.
         Ok(Token::StringLiteral(literal))
     }
 
-    fn consume_integer(&mut self) -> Result<Token, TokenError> {
-        let first_non_digit = self.input.as_bytes()[self.curr..]
-            .into_iter().position(|c| !(*c as char).is_ascii_digit()).unwrap();
-
-        let start = self.curr;
-        let end_idx = self.curr + first_non_digit - 1;
-        self.curr += first_non_digit;
-        let literal =
-            std::str::from_utf8(&self.input.as_bytes()[start..(end_idx + 1)])?;
-        let int_literal = literal.parse::<i64>()?;
-        Ok(Token::IntLiteral(int_literal))
+    fn consume_identifier(&mut self) -> Result<Token, TokenError> {
+        let identifier = self.consume_while("[Identifier]", |c| {
+            !is_identifier_char(*c)
+        })?;
+        Ok(Token::Id(identifier))
     }
 
-    fn init(mut self) -> Result<LazyTokenStream, TokenError> {
-        if self.input.as_bytes()[self.curr] != ('(' as u8) {
-            Err(TokenError::new(format!(
-                    "Expected program to begin with '('. Found {} instead.",
-                    self.input.as_bytes()[self.curr])))
-        } else {
-            self.curr += 1;
-            self.next_token = Some(Token::OpenParen);
-            Ok(self)
-        }
+    fn consume_integer(&mut self) -> Result<Token, TokenError> {
+        let literal = self.consume_while("[String Literal]", |c| {
+            !c.is_ascii_digit()
+        })?.parse::<i64>()?;
+        Ok(Token::IntLiteral(literal))
     }
 }

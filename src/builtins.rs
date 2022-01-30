@@ -1,5 +1,5 @@
-use crate::environment::Callable;
-use crate::environment::LazyEvaluationCallable;
+use crate::value::Callable;
+use crate::value::LazyEvaluationCallable;
 use crate::environment::Environment;
 use crate::value::Value;
 use crate::parser::ASTNode;

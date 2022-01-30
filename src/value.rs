@@ -1,6 +1,25 @@
 use crate::lexer::Token;
-use crate::environment::{Callable, LazyEvaluationCallable};
+use crate::parser::ASTNode;
+use crate::environment::Environment;
 use std::rc::Rc;
+
+// Trait that defines a "normal" function call. Arguments to the function are
+// evaluated prior to invoking the actual function. Think things like '<',
+// 'write', etc.
+pub trait Callable {
+    fn invoke(
+        &self, env: &Environment, args: &[Value]
+    ) -> Result<Value, String>;
+}
+
+// Trait that defines a function call which is passed an unevaluated AST
+// instead of a list of values. The function is then free to evaluate all or
+// none of the arguments. Think 'if' and 'lambda'.
+pub trait LazyEvaluationCallable {
+    fn invoke(
+        &self, env: &Environment, args: &[ASTNode]
+    ) -> Result<Value, String>;
+}
 
 #[derive(Clone)]
 pub enum Value {

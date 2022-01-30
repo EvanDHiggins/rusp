@@ -131,6 +131,9 @@ impl LazyTokenStream {
         self.input[self.curr]
     }
 
+    // Consumes characters, c, from the input until F(c) evaluates to false.
+    // This will advance self.curr to be one over the last character returned
+    // from the input.
     fn consume_while<F>(&mut self, desc: &str, func: F) -> Result<String, TokenError>
         where F: FnMut(&char) -> bool
     {

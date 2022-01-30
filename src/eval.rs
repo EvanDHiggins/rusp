@@ -1,8 +1,8 @@
-use crate::ast::ASTNode;
-use crate::ast::ASTNode::Expression;
-use crate::ast::ASTNode::Terminal;
-use crate::ast::ASTNode::Program;
-use crate::ast::ASTNode::Identifier;
+use crate::parser::ASTNode;
+use crate::parser::ASTNode::Expression;
+use crate::parser::ASTNode::Terminal;
+use crate::parser::ASTNode::Program;
+use crate::parser::ASTNode::Identifier;
 
 use crate::environment::Environment;
 use crate::value::Value;

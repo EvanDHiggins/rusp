@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use crate::value::Value;
-use crate::ast::ASTNode;
+use crate::parser::ASTNode;
 
 // Trait that defines a "normal" function call. Arguments to the function are
 // evaluated prior to invoking the actual function. Think things like '<',

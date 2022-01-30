@@ -1,1 +1,0 @@
-1. Refactor Value so it encapsulates types. We need at least Integers, strings, bools, and a Unit type.

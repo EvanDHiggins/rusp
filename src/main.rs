@@ -1,7 +1,7 @@
 use std::env;
 use std::fs;
 
-mod tokenize;
+mod lexer;
 mod ast;
 mod eval;
 mod environment;
@@ -10,7 +10,7 @@ mod callables;
 mod error;
 
 
-use tokenize::tokenize;
+use lexer::lex;
 use ast::parse;
 use eval::eval;
 use value::Value;
@@ -18,7 +18,7 @@ use value::Value;
 fn main() -> Result<(), error::InterpreterError> {
     let contents = fs::read_to_string(env::args().nth(1).unwrap())?;
 
-    let mut tokens = tokenize(&contents)?;
+    let mut tokens = lex(&contents)?;
     let ast = parse(&mut tokens).unwrap();
     let mut env = environment::Environment::new();
     env.insert(Value::make_id("<"), Box::new(callables::LessThan{}));

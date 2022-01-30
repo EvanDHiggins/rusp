@@ -1,4 +1,4 @@
-use crate::tokenize::Token;
+use crate::lexer::Token;
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]
 pub enum Value {

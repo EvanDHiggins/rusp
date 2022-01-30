@@ -14,7 +14,7 @@ pub trait TokenStream {
     fn peek(&self) -> Result<Option<Token>, TokenError>;
 }
 
-pub fn tokenize(s: &str) -> Result<LazyTokenStream, TokenError> {
+pub fn lex(s: &str) -> Result<LazyTokenStream, TokenError> {
     LazyTokenStream::new(s)
 }
 
@@ -76,7 +76,7 @@ fn is_identifier_char(c: char) -> bool {
 impl LazyTokenStream {
     pub fn new(input: &str) -> Result<LazyTokenStream, TokenError> {
         LazyTokenStream{
-            input: input.to_owned(),
+            input: String::from(input),
             curr: 0,
             next_token: Option::None
         }.init()

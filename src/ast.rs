@@ -1,6 +1,6 @@
-use crate::tokenize::TokenStream;
-use crate::tokenize::Token;
-use crate::tokenize::TokenError;
+use crate::lexer::TokenStream;
+use crate::lexer::Token;
+use crate::lexer::TokenError;
 
 #[derive(Debug)]
 pub enum ASTNode {

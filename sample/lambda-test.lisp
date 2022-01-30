@@ -2,3 +2,7 @@
 (if (< 234 433) (write "234 less than 433!") (write "433 less than 234?"))
 (write "another-one")
 (write ((lambda (x) x) "Lambda works!"))
+(let
+  writelambda
+  (lambda (y) (write y))
+  (writelambda "Wrote with a lambda!"))

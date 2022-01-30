@@ -65,12 +65,56 @@ impl Callable for Write {
 
 impl LazyEvaluationCallable for Lambda {
     fn invoke(
-        &self, _env: &Environment, _args: &[ASTNode]
+        &self, _: &Environment, args: &[ASTNode]
     ) -> Result<Value, String> {
+        assert!(args.len() == 2);
         // Produce a Value which is invokable and has an extended environment
         // s.t. any Id values in args[1] bind values to the environment
         // when called
-        Ok(Value::Str("".to_owned()))
+        let mut ids: Vec<String> = Vec::new();
+        if let ASTNode::Expression{children} = &args[0] {
+            for node in children {
+                if let ASTNode::Identifier{name} = node {
+                    ids.push(name.to_owned());
+                } else {
+                    return Err(
+                        format!("Found expression in lambda arg list that \
+                                 isn't an identifier: {:?}", node));
+                }
+            }
+        }
+
+        Ok(Value::Function(LambdaImpl::new_rc(&ids, &args[1])))
+    }
+}
+
+struct LambdaImpl {
+    ids: Vec<String>,
+    body: ASTNode,
+}
+
+impl LambdaImpl {
+    fn new_rc(ids: &Vec<String>, body: &ASTNode) -> std::rc::Rc<LambdaImpl> {
+        std::rc::Rc::new(LambdaImpl {
+            ids: ids.to_owned(),
+            body: body.clone()
+        })
+    }
+}
+
+impl Callable for LambdaImpl {
+    fn invoke(
+        &self, env: &Environment, args: &[Value]) -> Result<Value, String> {
+        assert!(self.ids.len() == args.len(),
+            "Invalid number of arguments passed to lambda expression.\n\
+             \tExpected: {}\n\tFound: {}", self.ids.len(), args.len());
+
+        let mut new_env = env.clone();
+        self.ids.iter().zip(args.iter()).for_each(|(id, value)| {
+            new_env.insert(id, value.clone());
+        });
+
+        eval(&new_env, &self.body)
     }
 }
 

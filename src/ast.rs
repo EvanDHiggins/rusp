@@ -3,7 +3,7 @@ use crate::lexer::Token;
 use crate::lexer::TokenError;
 use crate::error::InterpreterError;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ASTNode {
     Terminal { token: Token },
     Expression { children: Vec<ASTNode> },

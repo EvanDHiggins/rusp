@@ -37,10 +37,6 @@ impl Value {
     }
 
     pub fn is_callable(&self) -> bool {
-        match self {
-            Value::Function(_) => true,
-            Value::LazyFunction(_) => true,
-            _ => false
-        }
+        matches!(self, Value::Function(_) | Value::LazyFunction(_))
     }
 }

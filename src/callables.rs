@@ -68,9 +68,6 @@ impl LazyEvaluationCallable for Lambda {
         &self, _: &Environment, args: &[ASTNode]
     ) -> Result<Value, String> {
         assert!(args.len() == 2);
-        // Produce a Value which is invokable and has an extended environment
-        // s.t. any Id values in args[1] bind values to the environment
-        // when called
         let mut ids: Vec<String> = Vec::new();
         if let ASTNode::Expression{children} = &args[0] {
             for node in children {
@@ -94,7 +91,7 @@ struct LambdaImpl {
 }
 
 impl LambdaImpl {
-    fn new_rc(ids: &Vec<String>, body: &ASTNode) -> std::rc::Rc<LambdaImpl> {
+    fn new_rc(ids: &[String], body: &ASTNode) -> std::rc::Rc<LambdaImpl> {
         std::rc::Rc::new(LambdaImpl {
             ids: ids.to_owned(),
             body: body.clone()

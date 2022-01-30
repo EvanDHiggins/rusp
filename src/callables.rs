@@ -49,9 +49,9 @@ impl LazyEvaluationCallable for If {
         assert!(args.len() == 3);
         let condition = eval(env, &args[0]).unwrap().to_bool().unwrap();
         if condition {
-            Ok(eval(env, &args[1]).unwrap().clone())
+            Ok(eval(env, &args[1]).unwrap())
         } else {
-            Ok(eval(env, &args[2]).unwrap().clone())
+            Ok(eval(env, &args[2]).unwrap())
         }
     }
 }

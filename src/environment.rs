@@ -27,17 +27,19 @@ impl Environment {
         }
     }
 
+    #[allow(clippy::borrowed_box)]
     pub fn get(&self, name: &Value) -> Option<&Box<dyn Callable>> {
-        self.value_map.get(&name)
+        self.value_map.get(name)
     }
 
     pub fn insert(&mut self, name: Value, func: Box<dyn Callable>) {
         self.value_map.insert(name, func);
     }
 
+    #[allow(clippy::borrowed_box)]
     pub fn get_lazy_evaluated(
         &self, name: &Value) -> Option<&Box<dyn LazyEvaluationCallable>> {
-        self.lazy_evaluation_map.get(&name)
+        self.lazy_evaluation_map.get(name)
     }
 
     pub fn insert_lazy_evaluated(

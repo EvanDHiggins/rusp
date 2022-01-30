@@ -43,7 +43,7 @@ impl From<std::str::Utf8Error> for TokenError {
 
 impl TokenError {
     fn new(message: String) -> TokenError {
-        TokenError{message: message}
+        TokenError{message}
     }
 }
 
@@ -58,7 +58,7 @@ impl TokenStream for LazyTokenStream {
         if self.next_token.is_some() {
             let next = self.next_token.clone();
             self.next_token = self.consume_token_from_input()?;
-            Ok(next.clone())
+            Ok(next)
         } else {
             Ok(Option::None)
         }
@@ -83,7 +83,7 @@ impl LazyTokenStream {
     }
 
     fn init(mut self) -> Result<LazyTokenStream, TokenError> {
-        if self.input[self.curr] != ('(' as char) {
+        if self.input[self.curr] != '(' {
             Err(TokenError::new(format!(
                     "Expected program to begin with '('. Found {} instead.",
                     self.input[self.curr])))

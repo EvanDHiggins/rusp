@@ -30,7 +30,7 @@ impl From<String> for InterpreterError {
     fn from(s: String) -> InterpreterError {
         InterpreterError{
             kind: "Generic Error".to_owned(),
-            message: s.to_owned()
+            message: s
         }
     }
 }

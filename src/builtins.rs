@@ -1,4 +1,3 @@
-
 use crate::environment::Callable;
 use crate::environment::LazyEvaluationCallable;
 use crate::environment::Environment;

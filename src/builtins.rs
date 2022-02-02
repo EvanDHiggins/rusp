@@ -11,22 +11,18 @@ pub struct If {}
 pub struct Let {}
 pub struct Lambda {}
 
-impl Callable for LessThan {
-    fn invoke(
-        &self, _env: &Environment, args: &[Value]
-    ) -> Result<Value, String> {
-        assert!(args.len() == 2);
-        let lhs = &args[0];
-        let rhs = &args[1];
-        match (lhs, rhs) {
-            (Value::Int(lhs_val), Value::Int(rhs_val)) => {
-                Ok(Value::Boolean(lhs_val < rhs_val))
-            }
-            _ => Err(
-                format!(
-                    "Expected both args to '<' to be integers. \
-                     Found {:?} and {:?}.", lhs, rhs))
+pub fn less_than(_env: &Environment, args: &[Value]) -> Result<Value, String> {
+    assert!(args.len() == 2);
+    let lhs = &args[0];
+    let rhs = &args[1];
+    match (lhs, rhs) {
+        (Value::Int(lhs_val), Value::Int(rhs_val)) => {
+            Ok(Value::Boolean(lhs_val < rhs_val))
         }
+        _ => Err(
+            format!(
+                "Expected both args to '<' to be integers. \
+                 Found {:?} and {:?}.", lhs, rhs))
     }
 }
 

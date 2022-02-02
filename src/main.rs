@@ -25,7 +25,7 @@ use builtins::{
 
 fn default_env() -> environment::Environment {
     let mut env = environment::Environment::new();
-    env.insert("<", Value::Function(Rc::new(LessThan{})));
+    env.insert("<", Value::FunctionPtr(builtins::less_than));
     env.insert("write", Value::Function(Rc::new(Write{})));
     env.insert("if", Value::LazyFunction(Rc::new(If{})));
     env.insert("let", Value::LazyFunction(Rc::new(Let{})));

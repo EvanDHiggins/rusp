@@ -14,22 +14,14 @@ use lexer::lex;
 use parser::parse;
 use eval::eval;
 use value::Value;
-use std::rc::Rc;
-use builtins::{
-    LessThan,
-    Write,
-    If,
-    Let,
-    Lambda
-};
 
 fn default_env() -> environment::Environment {
     let mut env = environment::Environment::new();
     env.insert("<", Value::FunctionPtr(builtins::less_than));
-    env.insert("write", Value::Function(Rc::new(Write{})));
-    env.insert("if", Value::LazyFunction(Rc::new(If{})));
-    env.insert("let", Value::LazyFunction(Rc::new(Let{})));
-    env.insert("lambda", Value::LazyFunction(Rc::new(Lambda{})));
+    env.insert("write", Value::FunctionPtr(builtins::write_impl));
+    env.insert("if", Value::LazyFunctionPtr(builtins::if_impl));
+    env.insert("let", Value::LazyFunctionPtr(builtins::let_impl));
+    env.insert("lambda", Value::LazyFunctionPtr(builtins::lambda));
     env
 }
 

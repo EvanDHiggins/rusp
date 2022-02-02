@@ -60,14 +60,6 @@ fn resolve_identifier(
 fn eval_function(env: &Environment, func: &Value, args: &[ASTNode])
     -> Result<Value, String> {
     match func {
-        Value::Function(callable) => {
-            let mut arg_values = Vec::new();
-            for arg in args {
-                let arg_val = eval(env, arg)?;
-                arg_values.push(arg_val);
-            }
-            callable.invoke(env, &arg_values)
-        }
         Value::Closure(closure) => {
             let mut arg_values = Vec::new();
             for arg in args {
@@ -84,8 +76,8 @@ fn eval_function(env: &Environment, func: &Value, args: &[ASTNode])
             }
             func(env, &arg_values)
         }
-        Value::LazyFunction(callable) => {
-            callable.invoke(env, args)
+        Value::LazyFunctionPtr(func) => {
+            func(env, args)
         }
         _ => Err(format!(
                 "Could not evaluate {:?} as a function call.", func))

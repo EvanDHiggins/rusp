@@ -68,6 +68,14 @@ fn eval_function(env: &Environment, func: &Value, args: &[ASTNode])
             }
             callable.invoke(env, &arg_values)
         }
+        Value::Closure(closure) => {
+            let mut arg_values = Vec::new();
+            for arg in args {
+                let arg_val = eval(env, arg)?;
+                arg_values.push(arg_val);
+            }
+            closure.invoke(env, &arg_values)
+        }
         Value::LazyFunction(callable) => {
             callable.invoke(env, args)
         }

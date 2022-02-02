@@ -80,7 +80,7 @@ impl LazyEvaluationCallable for Lambda {
             }
         }
 
-        Ok(Value::Function(LambdaImpl::new_rc(&ids, &args[1])))
+        Ok(Value::Closure(LambdaImpl::new_rc(&ids, &args[1])))
     }
 }
 

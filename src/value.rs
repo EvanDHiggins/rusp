@@ -28,6 +28,7 @@ pub enum Value {
     Str(String),
     Function(Rc<dyn Callable>),
     LazyFunction(Rc<dyn LazyEvaluationCallable>),
+    Closure(Rc<dyn Callable>),
     Unit,
 } 
 
@@ -40,6 +41,7 @@ impl std::fmt::Debug for Value {
             Value::Boolean(b) => dbs.field("bool", b),
             Value::Str(s) => dbs.field("String", s),
             Value::Function(_) => dbs.field("Function", &"<No Name>"),
+            Value::Closure(_) => dbs.field("Closure", &"<No Name>"),
             Value::LazyFunction(_) => dbs.field("LazyFunction", &"<No Name>"),
             Value::Unit => dbs.field("Unit", &"")
         }.finish()
@@ -56,6 +58,7 @@ impl Value {
     }
 
     pub fn is_callable(&self) -> bool {
-        matches!(self, Value::Function(_) | Value::LazyFunction(_))
+        matches!(self,
+            Value::Function(_) | Value::LazyFunction(_) | Value::Closure(_))
     }
 }

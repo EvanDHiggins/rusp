@@ -26,8 +26,8 @@ pub enum Value {
     Int(i64),
     Boolean(bool),
     Str(String),
-    FunctionPtr(fn(&Environment, &[Value]) -> Result<Value, String>),
-    LazyFunctionPtr(fn(&Environment, &[ASTNode]) -> Result<Value, String>),
+    Function(fn(&Environment, &[Value]) -> Result<Value, String>),
+    LazyFunction(fn(&Environment, &[ASTNode]) -> Result<Value, String>),
     Closure(Rc<dyn Callable>),
     Unit,
 } 
@@ -40,9 +40,9 @@ impl std::fmt::Debug for Value {
             Value::Int(i) => dbs.field("i64", i),
             Value::Boolean(b) => dbs.field("bool", b),
             Value::Str(s) => dbs.field("String", s),
-            Value::FunctionPtr(_) => dbs.field("Function", &"<No Name>"),
+            Value::Function(_) => dbs.field("Function", &"<No Name>"),
             Value::Closure(_) => dbs.field("Closure", &"<No Name>"),
-            Value::LazyFunctionPtr(_) => dbs.field("LazyFunction", &"<No Name>"),
+            Value::LazyFunction(_) => dbs.field("LazyFunction", &"<No Name>"),
             Value::Unit => dbs.field("Unit", &"")
         }.finish()
     }
@@ -60,7 +60,7 @@ impl Value {
     pub fn is_callable(&self) -> bool {
         matches!(self,
             Value::Closure(_)
-            | Value::FunctionPtr(_)
-            | Value::LazyFunctionPtr(_))
+            | Value::Function(_)
+            | Value::LazyFunction(_))
     }
 }

@@ -17,11 +17,11 @@ use value::Value;
 
 fn default_env() -> environment::Environment {
     let mut env = environment::Environment::new();
-    env.insert("<", Value::FunctionPtr(builtins::less_than));
-    env.insert("write", Value::FunctionPtr(builtins::write_impl));
-    env.insert("if", Value::LazyFunctionPtr(builtins::if_impl));
-    env.insert("let", Value::LazyFunctionPtr(builtins::let_impl));
-    env.insert("lambda", Value::LazyFunctionPtr(builtins::lambda));
+    env.insert("<", Value::Function(builtins::less_than));
+    env.insert("write", Value::Function(builtins::write_impl));
+    env.insert("if", Value::LazyFunction(builtins::if_impl));
+    env.insert("let", Value::LazyFunction(builtins::let_impl));
+    env.insert("lambda", Value::LazyFunction(builtins::lambda));
     env
 }
 

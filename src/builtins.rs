@@ -60,14 +60,27 @@ pub fn let_impl(env: &Environment, args: &[ASTNode]) -> Result<Value, String> {
     }
 }
 
-pub fn write_impl(_env: &Environment, args: &[Value]) -> Result<Value, String> {
+pub fn to_str(_: &Environment, args: &[Value]) -> Result<Value, String> {
     assert!(args.len() == 1);
     let arg = &args[0];
-    if let Value::Str(v) = arg {
+    match arg {
+        Value::Int(i) => Ok(Value::Str(i.to_string())),
+        Value::Boolean(b) => Ok(Value::Str(b.to_string())),
+        Value::Str(s) => Ok(Value::Str(s.to_owned())),
+        _ => Err(
+            String::from(format!("Could not coerce {:?} to string.", arg)))
+
+    }
+}
+
+pub fn write_impl(env: &Environment, args: &[Value]) -> Result<Value, String> {
+    assert!(args.len() == 1);
+    let str_value = to_str(env, args)?;
+    if let Value::Str(v) = str_value {
         println!("{}", v);
         Ok(Value::Unit)
     } else {
-        Err(format!("Could not print value: {:?}", arg))
+        Err(format!("Could not print value: {:?}", str_value))
     }
 }
 

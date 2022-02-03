@@ -14,3 +14,5 @@
 (define countdown (lambda (x) (if (< x 1) (write "done!") (countdown (- x 1)))))
 
 (countdown 10)
+
+(write 10)

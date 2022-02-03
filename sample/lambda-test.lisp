@@ -7,12 +7,14 @@
   (lambda (y) (write y))
   (writelambda "Wrote with a lambda!"))
 
-(define foo (lambda (y) (write y)))
+(defun foo (y) (write y))
 
 (foo "Wrote through a define!")
 
-(define countdown (lambda (x) (if (< x 1) (write "done!") (countdown (- x 1)))))
-
+(defun countdown (x) (if (< x 1) (write "done!") (countdown (- x 1))))
 (countdown 10)
 
-(write 10)
+(defun multiplestatements (x) (write x) (write "stuff!") (write x))
+(multiplestatements "Hello, world")
+
+((lambda (x) (write x)) 12)

@@ -88,7 +88,7 @@ pub fn write_impl(env: &Environment, args: &[Value]) -> Result<Value, String> {
 pub fn lambda(_: &Environment, args: &[ASTNode]) -> Result<Value, String> {
     assert!(args.len() == 2);
     let mut ids: Vec<String> = Vec::new();
-    if let ASTNode::Expression{children} = &args[0] {
+    if let ASTNode::FunctionCall{children} = &args[0] {
         for node in children {
             if let ASTNode::Identifier{name} = node {
                 ids.push(name.to_owned());
@@ -99,37 +99,40 @@ pub fn lambda(_: &Environment, args: &[ASTNode]) -> Result<Value, String> {
             }
         }
     }
-
-    Ok(Value::Closure(LambdaImpl::new_rc(&ids, &args[1])))
+    Ok(Value::Closure(ClosureImpl::new_rc(&ids, args)))
 }
 
-struct LambdaImpl {
+pub struct ClosureImpl {
     ids: Vec<String>,
-    body: ASTNode,
+    body: Vec<ASTNode>,
 }
 
-impl LambdaImpl {
-    fn new_rc(ids: &[String], body: &ASTNode) -> std::rc::Rc<LambdaImpl> {
-        std::rc::Rc::new(LambdaImpl {
+impl ClosureImpl {
+    pub fn new_rc(ids: &[String], body: &[ASTNode]) -> std::rc::Rc<ClosureImpl> {
+        std::rc::Rc::new(ClosureImpl {
             ids: ids.to_owned(),
-            body: body.clone()
+            body: body.to_owned()
         })
     }
 }
 
-impl Callable for LambdaImpl {
+impl Callable for ClosureImpl {
     fn invoke(
         &self, env: &Environment, args: &[Value]) -> Result<Value, String> {
         assert!(self.ids.len() == args.len(),
             "Invalid number of arguments passed to lambda expression.\n\
              \tExpected: {}\n\tFound: {}", self.ids.len(), args.len());
 
+        // Create a new environment by binding all the ids to values.
         let mut new_env = env.clone();
         self.ids.iter().zip(args.iter()).for_each(|(id, value)| {
             new_env.insert(id, value.clone());
         });
 
-        eval(&new_env, &self.body)
+        // Evaluate each expression in body with the new environment applied.
+        self.body.iter().map(|expr| eval(&new_env, expr)).last().or_else(|| {
+            Some(Err("Not enough arguments passed to callable.".to_string()))
+        }).unwrap()
     }
 }
 

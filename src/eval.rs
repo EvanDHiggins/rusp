@@ -1,14 +1,15 @@
 use crate::parser::ASTNode;
 use crate::parser::ASTNode::{
-    Expression,
+    FunctionCall,
     Terminal,
     Program,
     Identifier,
-    Define,
+    Defun,
 };
 
 use crate::environment::Environment;
 use crate::value::Value;
+use crate::builtins::ClosureImpl;
 
 pub fn eval_program(mut env: &mut Environment, ast: &ASTNode) -> Result<Value, String> {
     match ast {
@@ -18,15 +19,18 @@ pub fn eval_program(mut env: &mut Environment, ast: &ASTNode) -> Result<Value, S
             }
             Ok(Value::Unit)
         }
-        Define{id, defined_ast} => {
-            let value = eval(&env, &*defined_ast)?;
-            if let ASTNode::Identifier{name} = &**id {
-                env.insert(name, value);
-                Ok(Value::Unit)
-            } else {
-                Err(String::from(
-                        "First argument to 'define' was not an identifier."))
-            }
+        Defun{defined_name, defined_params, exprs} => {
+            let closure = Value::Closure(
+                    ClosureImpl::new_rc(&defined_params, exprs));
+
+
+            // This is actual garbage, but I currently have basically no
+            // effective framework for handling multiple references to the
+            // same value. In this case we are duplicating potentially
+            // large chunks of the AST, which is really inefficient. But
+            // I'll have to revisit another day.
+            env.insert(defined_name, closure.clone());
+            Ok(closure)
         }
         node => {
             eval(&env, node)
@@ -43,7 +47,7 @@ pub fn eval(env: &Environment, ast: &ASTNode) -> Result<Value, String>{
         Identifier{name} => {
             resolve_identifier(env, name)
         }
-        Expression{children} => {
+        FunctionCall{children} => {
             let func_name = eval_expect_callable(
                 env, &children[0])?;
 

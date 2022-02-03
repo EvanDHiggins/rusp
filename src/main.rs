@@ -12,7 +12,7 @@ mod error;
 
 use lexer::lex;
 use parser::parse;
-use eval::eval;
+use eval::eval_program;
 use value::Value;
 
 fn default_env() -> environment::Environment {
@@ -30,6 +30,6 @@ fn main() -> Result<(), error::InterpreterError> {
 
     let mut tokens = lex(&contents)?;
     let ast = parse(&mut tokens)?;
-    eval(&default_env(), &ast)?;
+    eval_program(&mut default_env(), &ast)?;
     Ok(())
 }

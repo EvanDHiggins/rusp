@@ -6,3 +6,7 @@
   writelambda
   (lambda (y) (write y))
   (writelambda "Wrote with a lambda!"))
+
+(define foo (lambda (y) (write y)))
+
+(foo "Wrote through a define!")

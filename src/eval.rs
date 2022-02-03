@@ -1,11 +1,38 @@
 use crate::parser::ASTNode;
-use crate::parser::ASTNode::Expression;
-use crate::parser::ASTNode::Terminal;
-use crate::parser::ASTNode::Program;
-use crate::parser::ASTNode::Identifier;
+use crate::parser::ASTNode::{
+    Expression,
+    Terminal,
+    Program,
+    Identifier,
+    Define,
+};
 
 use crate::environment::Environment;
 use crate::value::Value;
+
+pub fn eval_program(mut env: &mut Environment, ast: &ASTNode) -> Result<Value, String> {
+    match ast {
+        Program{statements} => {
+            for statement in statements {
+                eval_program(&mut env, statement)?;
+            }
+            Ok(Value::Unit)
+        }
+        Define{id, defined_ast} => {
+            let value = eval(&env, &*defined_ast)?;
+            if let ASTNode::Identifier{name} = &**id {
+                env.insert(name, value);
+                Ok(Value::Unit)
+            } else {
+                Err(String::from(
+                        "First argument to 'define' was not an identifier."))
+            }
+        }
+        node => {
+            eval(&env, node)
+        }
+    }
+}
 
 pub fn eval(env: &Environment, ast: &ASTNode) -> Result<Value, String>{
     match ast {
@@ -25,12 +52,7 @@ pub fn eval(env: &Environment, ast: &ASTNode) -> Result<Value, String>{
 
             Ok(val)
         }
-        Program{statements} => {
-            for statement in statements {
-                eval(env, statement)?;
-            }
-            Ok(Value::Unit)
-        }
+        _ => Err(format!("Found ASTNode {:?} which should've been handled already.", ast))
     }
 }
 

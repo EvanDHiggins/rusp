@@ -4,6 +4,32 @@ use crate::value::Value;
 use crate::parser::ASTNode;
 use crate::eval::eval;
 
+pub fn plus(_env: &Environment, args: &[Value]) -> Result<Value, String> {
+    // Called like: (+ 1 2)
+    assert!(args.len() == 2);
+    binary_int_func("+", &args[0], &args[1], |x: i64, y: i64| x + y)
+}
+
+pub fn minus(_env: &Environment, args: &[Value]) -> Result<Value, String> {
+    // Called like: (+ 1 2)
+    assert!(args.len() == 2);
+    binary_int_func("-", &args[0], &args[1], |x: i64, y: i64| x - y)
+}
+
+fn binary_int_func(
+    name: &str, lhs: &Value, rhs: &Value, func: fn(i64, i64) -> i64
+) -> Result<Value, String> {
+    match (lhs, rhs) {
+        (Value::Int(lhs_val), Value::Int(rhs_val)) => {
+            Ok(Value::Int(func(*lhs_val, *rhs_val)))
+        }
+        _ => Err(
+            format!(
+                "Expected both args to '{}' to be integers. \
+                 Found {:?} and {:?}.", name, lhs, rhs))
+    }
+}
+
 pub fn less_than(_env: &Environment, args: &[Value]) -> Result<Value, String> {
     assert!(args.len() == 2);
     let lhs = &args[0];

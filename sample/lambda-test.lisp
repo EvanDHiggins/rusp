@@ -10,3 +10,7 @@
 (define foo (lambda (y) (write y)))
 
 (foo "Wrote through a define!")
+
+(define countdown (lambda (x) (if (< x 1) (write "done!") (countdown (- x 1)))))
+
+(countdown 10)

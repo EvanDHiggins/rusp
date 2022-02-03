@@ -22,6 +22,8 @@ fn default_env() -> environment::Environment {
     env.insert("if", Value::LazyFunction(builtins::if_impl));
     env.insert("let", Value::LazyFunction(builtins::let_impl));
     env.insert("lambda", Value::LazyFunction(builtins::lambda));
+    env.insert("+", Value::Function(builtins::plus));
+    env.insert("-", Value::Function(builtins::minus));
     env
 }
 

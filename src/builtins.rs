@@ -45,6 +45,15 @@ pub fn less_than(_env: &Environment, args: &[Value]) -> Result<Value, String> {
     }
 }
 
+pub fn list(env: &Environment, args: &[ASTNode]) -> Result<Value, String> {
+    let mut lst = Vec::new();
+    for arg in args {
+        lst.push(eval(env, arg)?);
+    }
+    Ok(Value::List(lst))
+}
+
+
 pub fn let_impl(env: &Environment, args: &[ASTNode]) -> Result<Value, String> {
     // Expect (let <Id> <Value> <body>)
     assert!(args.len() == 3);
@@ -62,15 +71,7 @@ pub fn let_impl(env: &Environment, args: &[ASTNode]) -> Result<Value, String> {
 
 pub fn to_str(_: &Environment, args: &[Value]) -> Result<Value, String> {
     assert!(args.len() == 1);
-    let arg = &args[0];
-    match arg {
-        Value::Int(i) => Ok(Value::Str(i.to_string())),
-        Value::Boolean(b) => Ok(Value::Str(b.to_string())),
-        Value::Str(s) => Ok(Value::Str(s.to_owned())),
-        _ => Err(
-            String::from(format!("Could not coerce {:?} to string.", arg)))
-
-    }
+    Ok(Value::Str(args[0].runtime_to_str()?))
 }
 
 pub fn write_impl(env: &Environment, args: &[Value]) -> Result<Value, String> {

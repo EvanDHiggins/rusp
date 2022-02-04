@@ -29,6 +29,7 @@ pub enum Value {
     Function(fn(&Environment, &[Value]) -> Result<Value, String>),
     LazyFunction(fn(&Environment, &[ASTNode]) -> Result<Value, String>),
     Closure(Rc<dyn Callable>),
+    List(Vec<Value>),
     Unit,
 } 
 
@@ -40,12 +41,21 @@ impl std::fmt::Debug for Value {
             Value::Int(i) => dbs.field("i64", i),
             Value::Boolean(b) => dbs.field("bool", b),
             Value::Str(s) => dbs.field("String", s),
+            Value::List(lst) => dbs.field("list", lst),
             Value::Function(_) => dbs.field("Function", &"<No Name>"),
             Value::Closure(_) => dbs.field("Closure", &"<No Name>"),
             Value::LazyFunction(_) => dbs.field("LazyFunction", &"<No Name>"),
             Value::Unit => dbs.field("Unit", &"")
         }.finish()
     }
+}
+
+fn list_to_str(lst: &Vec<Value>) -> Result<String, String> {
+    let mut strs = Vec::new();
+    for v in lst {
+        strs.push(v.runtime_to_str()?);
+    }
+    Ok(format!("({})", strs.join(" ")))
 }
 
 impl Value {
@@ -62,5 +72,18 @@ impl Value {
             Value::Closure(_)
             | Value::Function(_)
             | Value::LazyFunction(_))
+    }
+
+    // Converts a value to a string representation. This is expected to be
+    // called at runtime, so certain types of values aren't expected to be
+    // convertible to a string.
+    pub fn runtime_to_str(&self) -> Result<String, String> {
+        match self {
+            Value::Int(i) => Ok(i.to_string()),
+            Value::Boolean(b) => Ok(b.to_string()),
+            Value::Str(s) => Ok(s.to_string()),
+            Value::List(lst) => Ok(list_to_str(lst)?),
+            _ => Err("".to_string())
+        }
     }
 }

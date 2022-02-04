@@ -25,6 +25,7 @@ fn default_env() -> environment::Environment {
     env.insert("+", Value::Function(builtins::plus));
     env.insert("-", Value::Function(builtins::minus));
     env.insert("str", Value::Function(builtins::to_str));
+    env.insert("list", Value::LazyFunction(builtins::list));
     env
 }
 

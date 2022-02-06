@@ -156,9 +156,7 @@ impl LazyTokenStream {
 
     fn consume_string(&mut self) -> Result<Token, TokenError> {
         self.curr += 1;
-        let literal = self.consume_while("[String]", |c| {
-            *c == '"'
-        })?;
+        let literal = self.consume_while("[String]", |c| *c == '"')?;
         self.curr += 1; // Remove the '"' that we know exists.
         Ok(Token::StringLiteral(literal))
     }

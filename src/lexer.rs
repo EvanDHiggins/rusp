@@ -1,4 +1,5 @@
 use crate::error::InterpreterError;
+use std::collections::VecDeque;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Token {
@@ -11,10 +12,10 @@ pub enum Token {
 
 pub trait TokenStream {
     fn advance(&mut self) -> Result<Option<Token>, TokenError>;
-    fn peek(&self) -> Result<Option<Token>, TokenError>;
+    fn peek(&mut self) -> Result<Option<Token>, TokenError>;
 }
 
-pub fn lex(s: &str) -> Result<LazyTokenStream, TokenError> {
+pub fn lex(s: &str) -> LazyTokenStream {
     LazyTokenStream::new(s)
 }
 
@@ -47,8 +48,64 @@ impl TokenError {
     }
 }
 
+struct InteractiveCharStream {
+    buffer: VecDeque<char>,
+}
+
+impl InteractiveCharStream {
+    fn new() -> InteractiveCharStream {
+        InteractiveCharStream {
+            buffer: VecDeque::new(),
+        }
+    }
+
+    fn peek(&mut self) -> char {
+        'c'
+    }
+}
+
+trait CharStream {
+    fn advance(&mut self) -> Option<char>;
+    fn peek(&mut self) -> Option<char>;
+}
+
+struct StaticCharStream {
+    buffer: Vec<char>,
+    curr: usize,
+}
+
+impl StaticCharStream {
+    fn new(input: &str) -> StaticCharStream {
+        StaticCharStream{
+            buffer: input.chars().collect(),
+            curr: 0
+        }
+    }
+}
+
+impl CharStream for StaticCharStream {
+    fn advance(&mut self) -> Option<char> {
+        if self.curr >= self.buffer.len() {
+            None
+        } else {
+            let c = self.buffer[self.curr];
+            self.curr += 1;
+            Some(c)
+        }
+    }
+
+    fn peek(&mut self) -> Option<char> {
+        if self.curr >= self.buffer.len() {
+            None
+        } else {
+            Some(self.buffer[self.curr])
+        }
+    }
+}
+
 pub struct LazyTokenStream {
     input: Vec<char>,
+    char_stream: Box<dyn CharStream>,
     curr: usize,
     next_token: Option<Token>,
 }
@@ -64,8 +121,13 @@ impl TokenStream for LazyTokenStream {
         }
     }
 
-    fn peek(&self) -> Result<Option<Token>, TokenError> {
-        Ok(self.next_token.clone())
+    fn peek(&mut self) -> Result<Option<Token>, TokenError> {
+        if self.next_token.is_some() {
+            Ok(self.next_token.clone())
+        } else {
+            self.next_token = self.consume_token_from_input()?;
+            Ok(self.next_token.clone())
+        }
     }
 }
 
@@ -74,23 +136,12 @@ fn is_identifier_char(c: char) -> bool {
 }
 
 impl LazyTokenStream {
-    pub fn new(input: &str) -> Result<LazyTokenStream, TokenError> {
+    pub fn new(input: &str) -> LazyTokenStream {
         LazyTokenStream{
             input: input.chars().collect(),
+            char_stream: Box::new(StaticCharStream::new(input)),
             curr: 0,
             next_token: Option::None
-        }.init()
-    }
-
-    fn init(mut self) -> Result<LazyTokenStream, TokenError> {
-        if self.input[self.curr] != '(' {
-            Err(TokenError::new(format!(
-                    "Expected program to begin with '('. Found {} instead.",
-                    self.input[self.curr])))
-        } else {
-            self.curr += 1;
-            self.next_token = Some(Token::OpenParen);
-            Ok(self)
         }
     }
 

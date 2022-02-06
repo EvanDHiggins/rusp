@@ -72,7 +72,7 @@ fn read_token_or_fail(tokens: &mut dyn TokenStream) -> Result<Token, ParseError>
             "Attempted to read the next token, but there are none left."))
 }
 
-fn peek_or_fail(tokens: &dyn TokenStream) -> Result<Token, ParseError> {
+fn peek_or_fail(tokens: &mut dyn TokenStream) -> Result<Token, ParseError> {
     tokens.peek()?.ok_or_else(||
         ParseError::new(
             "Attempted to view next token, but there are none left."))
@@ -149,7 +149,7 @@ fn is_defun(token: &Token) -> bool {
     }
 }
 
-fn next_is_close_paren(tokens: &dyn TokenStream) -> Result<bool, ParseError> {
+fn next_is_close_paren(tokens: &mut dyn TokenStream) -> Result<bool, ParseError> {
     let next_tok = tokens.peek()?;
     Ok(matches!(next_tok, Some(Token::CloseParen)))
 }

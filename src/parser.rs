@@ -69,13 +69,13 @@ impl ASTNode {
 fn read_token_or_fail(tokens: &mut dyn TokenStream) -> Result<Token, ParseError> {
     tokens.advance()?.ok_or_else(||
         ParseError::new(
-            "Attempted to read next token, but there are none left."))
+            "Attempted to read the next token, but there are none left."))
 }
 
 fn peek_or_fail(tokens: &dyn TokenStream) -> Result<Token, ParseError> {
     tokens.peek()?.ok_or_else(||
         ParseError::new(
-            "Attempted to read next token, but there are none left."))
+            "Attempted to view next token, but there are none left."))
 }
 
 // Expects and parses a list of Id nodes from tokens. These are generally
@@ -155,7 +155,7 @@ fn next_is_close_paren(tokens: &dyn TokenStream) -> Result<bool, ParseError> {
 }
 
 pub fn parse_expr(tokens: &mut dyn TokenStream) -> Result<ASTNode, ParseError> {
-    let next_tok = read_token_or_fail(tokens)?;
+    let next_tok = read_token_or_fail(tokens).unwrap();
 
     if let Token::OpenParen = next_tok {
         let first_arg = peek_or_fail(tokens)?;

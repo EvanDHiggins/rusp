@@ -50,7 +50,7 @@ impl std::fmt::Debug for Value {
     }
 }
 
-fn list_to_str(lst: &Vec<Value>) -> Result<String, String> {
+fn list_to_str(lst: &[Value]) -> Result<String, String> {
     let mut strs = Vec::new();
     for v in lst {
         strs.push(v.runtime_to_str()?);

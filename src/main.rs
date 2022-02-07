@@ -1,13 +1,13 @@
 use std::env;
 use std::fs;
 
-mod lexer;
 mod parser;
 mod eval;
 mod environment;
 mod value;
 mod builtins;
 mod error;
+mod lexer;
 
 
 use lexer::lex;
@@ -33,7 +33,7 @@ fn main() -> Result<(), error::InterpreterError> {
     let contents = fs::read_to_string(env::args().nth(1).unwrap())?;
 
     let mut tokens = lex(&contents);
-    let ast = parse(&mut tokens)?;
+    let ast = parse(&mut *tokens)?;
     eval_program(&mut default_env(), &ast)?;
     Ok(())
 }

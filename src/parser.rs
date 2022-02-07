@@ -50,10 +50,7 @@ pub fn parse(tokens: &mut dyn TokenStream) -> Result<ASTNode, ParseError> {
 
 impl ASTNode {
     fn is_identifier(&self) -> bool {
-        match self {
-            ASTNode::Identifier{name: _} => true,
-            _ => false
-        }
+        matches!(self, ASTNode::Identifier{name: _})
     }
 
     fn id_or_fail(&self) -> Result<String, ParseError> {

@@ -11,17 +11,17 @@ use crate::environment::Environment;
 use crate::value::Value;
 use crate::builtins::ClosureImpl;
 
-pub fn eval_program(mut env: &mut Environment, ast: &ASTNode) -> Result<Value, String> {
+pub fn eval_program(env: &mut Environment, ast: &ASTNode) -> Result<Value, String> {
     match ast {
         Program{statements} => {
             for statement in statements {
-                eval_program(&mut env, statement)?;
+                eval_program(env, statement)?;
             }
             Ok(Value::Unit)
         }
         Defun{defined_name, defined_params, exprs} => {
             let closure = Value::Closure(
-                    ClosureImpl::new_rc(&defined_params, exprs));
+                    ClosureImpl::new_rc(defined_params, exprs));
 
 
             // This is actual garbage, but I currently have basically no
@@ -33,7 +33,7 @@ pub fn eval_program(mut env: &mut Environment, ast: &ASTNode) -> Result<Value, S
             Ok(closure)
         }
         node => {
-            eval(&env, node)
+            eval(env, node)
         }
     }
 }

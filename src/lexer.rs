@@ -1,5 +1,4 @@
 use crate::error::InterpreterError;
-use std::collections::VecDeque;
 use core::iter::Iterator;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -17,7 +16,7 @@ pub trait TokenStream {
 }
 
 pub fn lex(s: &str) -> LazyTokenStream {
-    LazyTokenStream::new(s)
+    LazyTokenStream::new(Box::new(StaticCharStream::new(s)))
 }
 
 #[derive(Debug)]
@@ -49,21 +48,6 @@ impl TokenError {
     }
 }
 
-struct InteractiveCharStream {
-    buffer: VecDeque<char>,
-}
-
-impl InteractiveCharStream {
-    fn new() -> InteractiveCharStream {
-        InteractiveCharStream {
-            buffer: VecDeque::new(),
-        }
-    }
-
-    fn peek(&mut self) -> char {
-        'c'
-    }
-}
 
 trait CharStream {
     fn advance(&mut self) -> Option<char>;
@@ -143,9 +127,9 @@ fn is_identifier_char(c: char) -> bool {
 }
 
 impl LazyTokenStream {
-    pub fn new(input: &str) -> LazyTokenStream {
+    fn new(char_stream: Box<dyn CharStream>) -> LazyTokenStream {
         LazyTokenStream{
-            char_stream: Box::new(StaticCharStream::new(input)),
+            char_stream,
             next_token: Option::None
         }
     }

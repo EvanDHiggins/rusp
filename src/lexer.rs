@@ -1,5 +1,6 @@
 use crate::error::InterpreterError;
 use std::collections::VecDeque;
+use core::iter::Iterator;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Token {
@@ -103,10 +104,16 @@ impl CharStream for StaticCharStream {
     }
 }
 
+impl core::iter::Iterator for dyn CharStream {
+    type Item = char;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.advance()
+    }
+}
+
 pub struct LazyTokenStream {
-    input: Vec<char>,
     char_stream: Box<dyn CharStream>,
-    curr: usize,
     next_token: Option<Token>,
 }
 
@@ -138,25 +145,27 @@ fn is_identifier_char(c: char) -> bool {
 impl LazyTokenStream {
     pub fn new(input: &str) -> LazyTokenStream {
         LazyTokenStream{
-            input: input.chars().collect(),
             char_stream: Box::new(StaticCharStream::new(input)),
-            curr: 0,
             next_token: Option::None
         }
     }
 
-    fn consume_token_from_input(&mut self) 
-        -> Result<Option<Token>, TokenError> {
+    fn consume_token_from_input(
+        &mut self) -> Result<Option<Token>, TokenError> {
         self.consume_whitespace();
-        if self.curr >= self.input.len() {
+        if let None = self.char_stream.peek() {
             return Ok(Option::None);
         }
-        let curr_char = self.curr_char();
+        let curr_char = if let Some(c) = self.char_stream.peek() {
+            Ok(c)
+        } else {
+            Err(TokenError::new("Reached end of input.".to_string()))
+        }?;
         if curr_char == '(' {
-            self.curr += 1;
+            self.char_stream.advance();
             Ok(Some(Token::OpenParen))
         } else if curr_char == ')' {
-            self.curr += 1;
+            self.char_stream.advance();
             Ok(Some(Token::CloseParen))
         } else if curr_char == '"' {
             self.consume_string().map(Some)
@@ -168,60 +177,42 @@ impl LazyTokenStream {
 
     }
 
-    fn stream_active(&self) -> bool {
-        self.curr < self.input.len()
-    }
-
-    fn consume_whitespace(&mut self){
-        while self.stream_active() && self.curr_char().is_whitespace() {
-            self.curr += 1;
+    fn consume_whitespace(&mut self) {
+        while self.char_stream.peek().map_or(false, |c| c.is_whitespace()) {
+            self.char_stream.advance();
         }
-    }
-
-    fn curr_char(&self) -> char {
-        self.input[self.curr]
     }
 
     // Consumes characters, c, from the input until F(c) evaluates to false.
     // This will advance self.curr to be one over the last character returned
     // from the input.
-    fn consume_while<F>(&mut self, desc: &str, func: F) -> Result<String, TokenError>
-        where F: FnMut(&char) -> bool
+    fn consume_while<F>(&mut self, mut func: F) -> Result<String, TokenError>
+        where F: FnMut(char) -> bool
     {
-        let first_failure = self.input[self.curr..]
-            .iter().position(func);
-        match first_failure {
-            Option::None =>
-                Err(TokenError::new(format!(
-                    "Ran out of input searching for {} at index {}.",
-                    desc, self.curr))),
-            Option::Some(idx) => {
-
-                let start = self.curr;
-                let end = self.curr + idx;
-                self.curr = end;
-                Ok(self.input[start..end].iter().collect::<String>())
-            }
+        let mut chars = Vec::new();
+        while self.char_stream.peek().map_or(false, |c| func(c)) {
+            chars.push(self.char_stream.advance().unwrap());
         }
+        Ok(chars.iter().collect::<String>())
     }
 
     fn consume_string(&mut self) -> Result<Token, TokenError> {
-        self.curr += 1;
-        let literal = self.consume_while("[String]", |c| *c == '"')?;
-        self.curr += 1; // Remove the '"' that we know exists.
+        self.char_stream.advance();
+        let literal = self.consume_while(|c| c != '"')?;
+        self.char_stream.advance();
         Ok(Token::StringLiteral(literal))
     }
 
     fn consume_identifier(&mut self) -> Result<Token, TokenError> {
-        let identifier = self.consume_while("[Identifier]", |c| {
-            !is_identifier_char(*c)
+        let identifier = self.consume_while(|c| {
+            is_identifier_char(c)
         })?;
         Ok(Token::Id(identifier))
     }
 
     fn consume_integer(&mut self) -> Result<Token, TokenError> {
-        let literal = self.consume_while("[String Literal]", |c| {
-            !c.is_ascii_digit()
+        let literal = self.consume_while(|c| {
+            c.is_ascii_digit()
         })?.parse::<i64>()?;
         Ok(Token::IntLiteral(literal))
     }

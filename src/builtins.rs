@@ -4,6 +4,13 @@ use crate::value::Value;
 use crate::parser::ASTNode;
 use crate::eval::eval;
 
+use text_io::read;
+
+pub fn readline(_: &Environment, args: &[Value]) -> Result<Value, String> {
+    assert!(args.is_empty());
+    Ok(Value::Str(read!("{}\n")))
+}
+
 pub fn plus(_env: &Environment, args: &[Value]) -> Result<Value, String> {
     // Called like: (+ 1 2)
     assert!(args.len() == 2);

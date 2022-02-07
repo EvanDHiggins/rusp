@@ -74,20 +74,6 @@ impl LazyTokenStream {
             self.char_stream.advance();
         }
     }
-
-    // Consumes characters, c, from the input until F(c) evaluates to false.
-    // This will advance self.curr to be one over the last character returned
-    // from the input.
-    fn consume_while<F>(&mut self, func: F) -> Result<String, TokenError>
-        where F: Fn(char) -> bool
-    {
-        let mut chars = Vec::new();
-        while self.char_stream.peek().map_or(false, &func) {
-            chars.push(self.char_stream.advance().unwrap());
-        }
-        Ok(chars.iter().collect::<String>())
-    }
-
     fn consume_string(&mut self) -> Result<Token, TokenError> {
         self.char_stream.advance();
         let literal = self.consume_while(|c| c != '"')?;
@@ -108,4 +94,16 @@ impl LazyTokenStream {
         })?.parse::<i64>()?;
         Ok(Token::IntLiteral(literal))
     }
+
+    // Consumes characters, c, from the input until F(c) evaluates to false.
+    fn consume_while<F>(&mut self, func: F) -> Result<String, TokenError>
+        where F: Fn(char) -> bool
+    {
+        let mut chars = Vec::new();
+        while self.char_stream.peek().map_or(false, &func) {
+            chars.push(self.char_stream.advance().unwrap());
+        }
+        Ok(chars.iter().collect::<String>())
+    }
+
 }

@@ -33,8 +33,27 @@ pub fn eval_program(env: &mut Environment, ast: &ASTNode) -> Result<Value, Strin
             Ok(closure)
         }
         node => {
-            eval(env, node)
+            eval_maybe_mutate_env(env, node)
         }
+    }
+}
+
+// We first check if ast represents a callable which needs to mutate its passed
+// environment. This is narrowly for 'defun'. Otherwise we delegate to the
+// immutable env eval.
+fn eval_maybe_mutate_env(
+    env: &mut Environment, ast: &ASTNode
+) -> Result<Value, String> {
+    match ast {
+        FunctionCall{children} => {
+            let func_name = eval_expect_callable(env, &children[0])?;
+            if let Value::EnvMutatingFunction(f) = func_name {
+                f(env, &children[1..])
+            } else {
+                eval(env, ast)
+            }
+        }
+        _ => eval(env, ast)
     }
 }
 

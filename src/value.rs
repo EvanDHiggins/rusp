@@ -21,6 +21,12 @@ pub trait LazyEvaluationCallable {
     ) -> Result<Value, String>;
 }
 
+pub trait LazyEvaluationCallableWithMutableEnv {
+    fn invoke(
+        &self, env: &mut Environment, args: &[ASTNode],
+    ) -> Result<Value, String>;
+}
+
 #[derive(Clone)]
 pub enum Value {
     Int(i64),
@@ -28,6 +34,7 @@ pub enum Value {
     Str(String),
     Function(fn(&Environment, &[Value]) -> Result<Value, String>),
     LazyFunction(fn(&Environment, &[ASTNode]) -> Result<Value, String>),
+    EnvMutatingFunction(fn(&mut Environment, &[ASTNode]) -> Result<Value, String>),
     Closure(Rc<dyn Callable>),
     List(Vec<Value>),
     Unit,
@@ -45,6 +52,7 @@ impl std::fmt::Debug for Value {
             Value::Function(_) => dbs.field("Function", &"<No Name>"),
             Value::Closure(_) => dbs.field("Closure", &"<No Name>"),
             Value::LazyFunction(_) => dbs.field("LazyFunction", &"<No Name>"),
+            Value::EnvMutatingFunction(_) => dbs.field("EnvMutatingFunction", &"<No Name>"),
             Value::Unit => dbs.field("Unit", &"")
         }.finish()
     }

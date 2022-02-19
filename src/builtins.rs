@@ -92,13 +92,27 @@ pub fn write_impl(env: &Environment, args: &[Value]) -> Result<Value, String> {
     }
 }
 
+pub fn defun(env: &mut Environment, args: &[ASTNode]) -> Result<Value, String>
+{
+    let name = if let ASTNode::Identifier{name} = &args[0] {
+        Ok(name)
+    } else {
+        Err(format!(
+                "Expected identifier as first argument to defun. Found {:?}",
+                args[0]))
+    }?;
+    let ids = expect_id_list(&args[1])?;
+    let body = &args[1..];
+    let closure = Value::Closure(ClosureImpl::new_rc(&ids, body));
+    env.insert(name, closure);
+    Ok(Value::Unit)
+}
 
-pub fn lambda(_: &Environment, args: &[ASTNode]) -> Result<Value, String> {
-    assert!(args.len() == 2);
+fn expect_id_list(node: &ASTNode) -> Result<Vec<String>, String> {
     let mut ids: Vec<String> = Vec::new();
-    if let ASTNode::FunctionCall{children} = &args[0] {
-        for node in children {
-            if let ASTNode::Identifier{name} = node {
+    if let ASTNode::FunctionCall{children} = node {
+        for id in children {
+            if let ASTNode::Identifier{name} = id {
                 ids.push(name.to_owned());
             } else {
                 return Err(
@@ -107,6 +121,12 @@ pub fn lambda(_: &Environment, args: &[ASTNode]) -> Result<Value, String> {
             }
         }
     }
+    Ok(ids)
+}
+
+pub fn lambda(_: &Environment, args: &[ASTNode]) -> Result<Value, String> {
+    assert!(args.len() == 2);
+    let ids = expect_id_list(&args[0])?;
     Ok(Value::Closure(ClosureImpl::new_rc(&ids, args)))
 }
 

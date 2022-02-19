@@ -27,6 +27,7 @@ fn default_env() -> environment::Environment {
     env.insert("str", Value::Function(builtins::to_str));
     env.insert("list", Value::LazyFunction(builtins::list));
     env.insert("readline", Value::Function(builtins::readline));
+    env.insert("defun", Value::EnvMutatingFunction(builtins::defun));
     env
 }
 

@@ -4,12 +4,10 @@ use crate::parser::ASTNode::{
     Terminal,
     Program,
     Identifier,
-    Defun,
 };
 
 use crate::environment::Environment;
 use crate::value::Value;
-use crate::builtins::ClosureImpl;
 
 pub fn eval_program(env: &mut Environment, ast: &ASTNode) -> Result<Value, String> {
     match ast {
@@ -18,19 +16,6 @@ pub fn eval_program(env: &mut Environment, ast: &ASTNode) -> Result<Value, Strin
                 eval_program(env, statement)?;
             }
             Ok(Value::Unit)
-        }
-        Defun{defined_name, defined_params, exprs} => {
-            let closure = Value::Closure(
-                    ClosureImpl::new_rc(defined_params, exprs));
-
-
-            // This is actual garbage, but I currently have basically no
-            // effective framework for handling multiple references to the
-            // same value. In this case we are duplicating potentially
-            // large chunks of the AST, which is really inefficient. But
-            // I'll have to revisit another day.
-            env.insert(defined_name, closure.clone());
-            Ok(closure)
         }
         node => {
             eval_maybe_mutate_env(env, node)

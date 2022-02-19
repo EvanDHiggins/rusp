@@ -79,7 +79,8 @@ impl Value {
         matches!(self,
             Value::Closure(_)
             | Value::Function(_)
-            | Value::LazyFunction(_))
+            | Value::LazyFunction(_)
+            | Value::EnvMutatingFunction(_))
     }
 
     // Converts a value to a string representation. This is expected to be

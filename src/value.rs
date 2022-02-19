@@ -1,6 +1,6 @@
 use crate::lexer::Token;
 use crate::parser::ASTNode;
-use crate::environment::Environment;
+use crate::eval::environment::Environment;
 use std::rc::Rc;
 
 // Trait that defines a "normal" function call. Arguments to the function are

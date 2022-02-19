@@ -1,3 +1,8 @@
+pub mod builtins;
+pub mod environment;
+
+use environment::Environment;
+
 use crate::parser::ASTNode;
 use crate::parser::ASTNode::{
     FunctionCall,
@@ -6,8 +11,23 @@ use crate::parser::ASTNode::{
     Identifier,
 };
 
-use crate::environment::Environment;
 use crate::value::Value;
+
+pub fn default_env() -> environment::Environment {
+    let mut env = environment::Environment::new();
+    env.insert("<", Value::Function(builtins::less_than));
+    env.insert("write", Value::Function(builtins::write_impl));
+    env.insert("if", Value::LazyFunction(builtins::if_impl));
+    env.insert("let", Value::LazyFunction(builtins::let_impl));
+    env.insert("lambda", Value::LazyFunction(builtins::lambda));
+    env.insert("+", Value::Function(builtins::plus));
+    env.insert("-", Value::Function(builtins::minus));
+    env.insert("str", Value::Function(builtins::to_str));
+    env.insert("list", Value::LazyFunction(builtins::list));
+    env.insert("readline", Value::Function(builtins::readline));
+    env.insert("defun", Value::EnvMutatingFunction(builtins::defun));
+    env
+}
 
 pub fn eval_program(env: &mut Environment, ast: &ASTNode) -> Result<Value, String> {
     match ast {

@@ -1,5 +1,5 @@
+use super::environment::Environment;
 use crate::value::Callable;
-use crate::environment::Environment;
 use crate::value::Value;
 use crate::parser::ASTNode;
 use crate::eval::eval;

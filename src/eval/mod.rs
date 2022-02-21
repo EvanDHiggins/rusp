@@ -1,6 +1,7 @@
 pub mod builtins;
 pub mod environment;
 pub mod error;
+pub mod value;
 
 use environment::Environment;
 use error::RuntimeError;
@@ -8,7 +9,7 @@ use error::RuntimeError;
 use crate::parser::ASTNode;
 use crate::parser::ASTNode::{Identifier, Program, SExpr, Terminal};
 
-use crate::value::Value;
+use value::Value;
 
 pub fn default_env() -> environment::Environment {
     let mut env = environment::Environment::new();

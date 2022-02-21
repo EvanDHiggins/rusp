@@ -5,7 +5,6 @@ mod error;
 mod eval;
 mod lexer;
 mod parser;
-mod value;
 
 use eval::eval_program;
 use lexer::lex;

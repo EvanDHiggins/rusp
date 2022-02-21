@@ -1,9 +1,9 @@
 use super::environment::Environment;
 use super::error::RuntimeError;
 use crate::eval::eval;
+use crate::eval::value::Callable;
+use crate::eval::value::Value;
 use crate::parser::ASTNode;
-use crate::value::Callable;
-use crate::value::Value;
 
 use text_io::read;
 

@@ -6,7 +6,7 @@ use crate::error::InterpreterError;
 #[derive(Debug, Clone)]
 pub enum ASTNode {
     Terminal { token: Token },
-    FunctionCall { children: Vec<ASTNode> },
+    SExpr { children: Vec<ASTNode> },
     Identifier { name: String },
     Program { statements: Vec<ASTNode> },
 }
@@ -72,7 +72,7 @@ pub fn parse_expr(tokens: &mut dyn TokenStream) -> Result<ASTNode, ParseError> {
             nodes.push(parse_expr(tokens)?);
         }
         consume_close_paren(tokens)?;
-        Ok(ASTNode::FunctionCall{children: nodes})
+        Ok(ASTNode::SExpr{children: nodes})
     } else if let Token::Id(identifier) = next_tok {
         Ok(ASTNode::Identifier{name: identifier})
     } else {

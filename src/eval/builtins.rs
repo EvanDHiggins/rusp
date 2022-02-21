@@ -110,7 +110,7 @@ pub fn defun(env: &mut Environment, args: &[ASTNode]) -> Result<Value, String>
 
 fn expect_id_list(node: &ASTNode) -> Result<Vec<String>, String> {
     let mut ids: Vec<String> = Vec::new();
-    if let ASTNode::FunctionCall{children} = node {
+    if let ASTNode::SExpr{children} = node {
         for id in children {
             if let ASTNode::Identifier{name} = id {
                 ids.push(name.to_owned());

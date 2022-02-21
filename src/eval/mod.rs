@@ -5,7 +5,7 @@ use environment::Environment;
 
 use crate::parser::ASTNode;
 use crate::parser::ASTNode::{
-    FunctionCall,
+    SExpr,
     Terminal,
     Program,
     Identifier,
@@ -43,6 +43,14 @@ pub fn eval_program(env: &mut Environment, ast: &ASTNode) -> Result<Value, Strin
     }
 }
 
+fn extract_identifier(node: &ASTNode) -> Option<String> {
+    if let ASTNode::Identifier{name} = node {
+        Some(name.to_owned())
+    } else {
+        None
+    }
+}
+
 // We first check if ast represents a callable which needs to mutate its passed
 // environment. This is narrowly for 'defun'. Otherwise we delegate to the
 // immutable env eval.
@@ -50,10 +58,20 @@ fn eval_maybe_mutate_env(
     env: &mut Environment, ast: &ASTNode
 ) -> Result<Value, String> {
     match ast {
-        FunctionCall{children} => {
-            let func_name = eval_expect_callable(env, &children[0])?;
-            if let Value::EnvMutatingFunction(f) = func_name {
-                f(env, &children[1..])
+        SExpr{children} => {
+            // Try to lookup the first element of ast as an EnvMutatingFunction.
+            // If we can't do that, then we will just run 'eval' instead.
+            let maybe_callable = extract_identifier(&children[0])
+                .and_then(|name| env.get(&name))
+                .and_then(|value| {
+                    if let Value::EnvMutatingFunction(f) = value {
+                        Some(f)
+                    } else {
+                        None
+                    }
+            });
+            if let Some(env_mutating_func) = maybe_callable {
+                env_mutating_func(env, &children[1..])
             } else {
                 eval(env, ast)
             }
@@ -71,7 +89,7 @@ pub fn eval(env: &Environment, ast: &ASTNode) -> Result<Value, String>{
         Identifier{name} => {
             resolve_identifier(env, name)
         }
-        FunctionCall{children} => {
+        SExpr{children} => {
             let func_name = eval_expect_callable(
                 env, &children[0])?;
 

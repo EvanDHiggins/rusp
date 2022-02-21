@@ -1,7 +1,9 @@
 pub mod builtins;
 pub mod environment;
+pub mod error;
 
 use environment::Environment;
+use error::RuntimeError;
 
 use crate::parser::ASTNode;
 use crate::parser::ASTNode::{Identifier, Program, SExpr, Terminal};
@@ -24,7 +26,7 @@ pub fn default_env() -> environment::Environment {
     env
 }
 
-pub fn eval_program(env: &mut Environment, ast: &ASTNode) -> Result<Value, String> {
+pub fn eval_program(env: &mut Environment, ast: &ASTNode) -> Result<Value, RuntimeError> {
     match ast {
         Program { statements } => {
             for statement in statements {
@@ -47,7 +49,7 @@ fn extract_identifier(node: &ASTNode) -> Option<String> {
 // We first check if ast represents a callable which needs to mutate its passed
 // environment. This is narrowly for 'defun'. Otherwise we delegate to the
 // immutable env eval.
-fn eval_maybe_mutate_env(env: &mut Environment, ast: &ASTNode) -> Result<Value, String> {
+fn eval_maybe_mutate_env(env: &mut Environment, ast: &ASTNode) -> Result<Value, RuntimeError> {
     match ast {
         SExpr { children } => {
             // Try to lookup the first element of ast as an EnvMutatingFunction.
@@ -71,10 +73,10 @@ fn eval_maybe_mutate_env(env: &mut Environment, ast: &ASTNode) -> Result<Value, 
     }
 }
 
-pub fn eval(env: &Environment, ast: &ASTNode) -> Result<Value, String> {
+pub fn eval(env: &Environment, ast: &ASTNode) -> Result<Value, RuntimeError> {
     match ast {
         Terminal { token } => {
-            let value = Value::parse(token)?;
+            let value = Value::parse(token).map_err(|msg| RuntimeError::new(&msg))?;
             Ok(value)
         }
         Identifier { name } => resolve_identifier(env, name),
@@ -85,41 +87,41 @@ pub fn eval(env: &Environment, ast: &ASTNode) -> Result<Value, String> {
 
             Ok(val)
         }
-        _ => Err(format!(
+        _ => Err(RuntimeError::new(&format!(
             "Found ASTNode {:?} which should've been handled already.",
             ast
-        )),
+        ))),
     }
 }
 
-fn eval_expect_callable(env: &Environment, arg: &ASTNode) -> Result<Value, String> {
+fn eval_expect_callable(env: &Environment, arg: &ASTNode) -> Result<Value, RuntimeError> {
     let value = eval(env, arg)?;
     if value.is_callable() {
         Ok(value)
     } else {
-        Err(format!(
+        Err(RuntimeError::new(&format!(
             "First argument, {:?} to function call is not a \
                  function value.",
             arg
-        ))
+        )))
     }
 }
 
 // Looks up identifier in env and fails if it's not found.
-fn resolve_identifier(env: &Environment, identifier: &str) -> Result<Value, String> {
+fn resolve_identifier(env: &Environment, identifier: &str) -> Result<Value, RuntimeError> {
     let maybe_value = env.get(identifier);
     if let Some(value) = maybe_value {
         Ok(value.clone())
     } else {
-        Err(format!(
+        Err(RuntimeError::new(&format!(
             "Failed to find identifier {:?} in environment.",
             identifier
-        ))
+        )))
     }
 }
 
 // Converts args to a list of Values.
-fn resolve_args(env: &Environment, args: &[ASTNode]) -> Result<Vec<Value>, String> {
+fn resolve_args(env: &Environment, args: &[ASTNode]) -> Result<Vec<Value>, RuntimeError> {
     let mut arg_values = Vec::new();
     for arg in args {
         let arg_val = eval(env, arg)?;
@@ -128,11 +130,14 @@ fn resolve_args(env: &Environment, args: &[ASTNode]) -> Result<Vec<Value>, Strin
     Ok(arg_values)
 }
 
-fn eval_function(env: &Environment, func: &Value, args: &[ASTNode]) -> Result<Value, String> {
+fn eval_function(env: &Environment, func: &Value, args: &[ASTNode]) -> Result<Value, RuntimeError> {
     match func {
         Value::Closure(closure) => closure.invoke(env, &resolve_args(env, args)?),
         Value::Function(func) => func(env, &resolve_args(env, args)?),
         Value::LazyFunction(func) => func(env, args),
-        _ => Err(format!("Could not evaluate {:?} as a function call.", func)),
+        _ => Err(RuntimeError::new(&format!(
+            "Could not evaluate {:?} as a function call.",
+            func
+        ))),
     }
 }

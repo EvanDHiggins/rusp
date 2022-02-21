@@ -1,4 +1,5 @@
 use crate::eval::environment::Environment;
+use crate::eval::error::RuntimeError;
 use crate::lexer::Token;
 use crate::parser::ASTNode;
 use std::rc::Rc;
@@ -7,7 +8,7 @@ use std::rc::Rc;
 // evaluated prior to invoking the actual function. Think things like '<',
 // 'write', etc.
 pub trait Callable {
-    fn invoke(&self, env: &Environment, args: &[Value]) -> Result<Value, String>;
+    fn invoke(&self, env: &Environment, args: &[Value]) -> Result<Value, RuntimeError>;
 }
 
 // Trait that defines a function call which is passed an unevaluated AST
@@ -26,9 +27,9 @@ pub enum Value {
     Int(i64),
     Boolean(bool),
     Str(String),
-    Function(fn(&Environment, &[Value]) -> Result<Value, String>),
-    LazyFunction(fn(&Environment, &[ASTNode]) -> Result<Value, String>),
-    EnvMutatingFunction(fn(&mut Environment, &[ASTNode]) -> Result<Value, String>),
+    Function(fn(&Environment, &[Value]) -> Result<Value, RuntimeError>),
+    LazyFunction(fn(&Environment, &[ASTNode]) -> Result<Value, RuntimeError>),
+    EnvMutatingFunction(fn(&mut Environment, &[ASTNode]) -> Result<Value, RuntimeError>),
     Closure(Rc<dyn Callable>),
     List(Vec<Value>),
     Unit,

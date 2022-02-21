@@ -1,3 +1,4 @@
+use crate::eval::error::RuntimeError;
 use std::fmt;
 
 pub struct InterpreterError {
@@ -40,6 +41,15 @@ impl From<std::io::Error> for InterpreterError {
         InterpreterError {
             kind: String::from("io"),
             message: err.to_string(),
+        }
+    }
+}
+
+impl From<RuntimeError> for InterpreterError {
+    fn from(err: RuntimeError) -> Self {
+        InterpreterError {
+            kind: String::from("RuntimeError"),
+            message: err.message,
         }
     }
 }

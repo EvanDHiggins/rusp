@@ -48,8 +48,6 @@ impl From<std::str::Utf8Error> for TokenError {
 
 impl TokenError {
     fn new(message: String) -> TokenError {
-        TokenError{message}
+        TokenError { message }
     }
 }
-
-

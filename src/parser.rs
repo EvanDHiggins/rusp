@@ -1,7 +1,7 @@
-use crate::lexer::TokenStream;
+use crate::error::InterpreterError;
 use crate::lexer::Token;
 use crate::lexer::TokenError;
-use crate::error::InterpreterError;
+use crate::lexer::TokenStream;
 
 #[derive(Debug, Clone)]
 pub enum ASTNode {
@@ -13,12 +13,14 @@ pub enum ASTNode {
 
 #[derive(Debug)]
 pub struct ParseError {
-    message: String
+    message: String,
 }
 
 impl From<TokenError> for ParseError {
     fn from(token_error: TokenError) -> ParseError {
-        ParseError{message: token_error.message}
+        ParseError {
+            message: token_error.message,
+        }
     }
 }
 
@@ -30,7 +32,9 @@ impl From<ParseError> for InterpreterError {
 
 impl ParseError {
     fn new(message: &str) -> ParseError {
-        ParseError{message: String::from(message)}
+        ParseError {
+            message: String::from(message),
+        }
     }
 }
 
@@ -40,21 +44,22 @@ pub fn parse(tokens: &mut dyn TokenStream) -> Result<ASTNode, ParseError> {
         let expr = parse_expr(tokens)?;
         statements.push(expr);
     }
-    Ok(ASTNode::Program{statements})
+    Ok(ASTNode::Program { statements })
 }
 
 fn read_token_or_fail(tokens: &mut dyn TokenStream) -> Result<Token, ParseError> {
-    tokens.advance()?.ok_or_else(||
-        ParseError::new(
-            "Attempted to read the next token, but there are none left."))
+    tokens.advance()?.ok_or_else(|| {
+        ParseError::new("Attempted to read the next token, but there are none left.")
+    })
 }
 
 fn consume_close_paren(tokens: &mut dyn TokenStream) -> Result<(), ParseError> {
     let tok = read_token_or_fail(tokens)?;
     match tok {
         Token::CloseParen => Ok(()),
-        _ => Err(ParseError::new(format!(
-                "Expected ')', but found {:?}.", tok).as_str()))
+        _ => Err(ParseError::new(
+            format!("Expected ')', but found {:?}.", tok).as_str(),
+        )),
     }
 }
 
@@ -72,10 +77,10 @@ pub fn parse_expr(tokens: &mut dyn TokenStream) -> Result<ASTNode, ParseError> {
             nodes.push(parse_expr(tokens)?);
         }
         consume_close_paren(tokens)?;
-        Ok(ASTNode::SExpr{children: nodes})
+        Ok(ASTNode::SExpr { children: nodes })
     } else if let Token::Id(identifier) = next_tok {
-        Ok(ASTNode::Identifier{name: identifier})
+        Ok(ASTNode::Identifier { name: identifier })
     } else {
-        Ok(ASTNode::Terminal{token: next_tok})
+        Ok(ASTNode::Terminal { token: next_tok })
     }
 }

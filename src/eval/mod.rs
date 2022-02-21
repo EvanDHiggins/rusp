@@ -4,12 +4,7 @@ pub mod environment;
 use environment::Environment;
 
 use crate::parser::ASTNode;
-use crate::parser::ASTNode::{
-    SExpr,
-    Terminal,
-    Program,
-    Identifier,
-};
+use crate::parser::ASTNode::{Identifier, Program, SExpr, Terminal};
 
 use crate::value::Value;
 
@@ -31,20 +26,18 @@ pub fn default_env() -> environment::Environment {
 
 pub fn eval_program(env: &mut Environment, ast: &ASTNode) -> Result<Value, String> {
     match ast {
-        Program{statements} => {
+        Program { statements } => {
             for statement in statements {
                 eval_program(env, statement)?;
             }
             Ok(Value::Unit)
         }
-        node => {
-            eval_maybe_mutate_env(env, node)
-        }
+        node => eval_maybe_mutate_env(env, node),
     }
 }
 
 fn extract_identifier(node: &ASTNode) -> Option<String> {
-    if let ASTNode::Identifier{name} = node {
+    if let ASTNode::Identifier { name } = node {
         Some(name.to_owned())
     } else {
         None
@@ -54,11 +47,9 @@ fn extract_identifier(node: &ASTNode) -> Option<String> {
 // We first check if ast represents a callable which needs to mutate its passed
 // environment. This is narrowly for 'defun'. Otherwise we delegate to the
 // immutable env eval.
-fn eval_maybe_mutate_env(
-    env: &mut Environment, ast: &ASTNode
-) -> Result<Value, String> {
+fn eval_maybe_mutate_env(env: &mut Environment, ast: &ASTNode) -> Result<Value, String> {
     match ast {
-        SExpr{children} => {
+        SExpr { children } => {
             // Try to lookup the first element of ast as an EnvMutatingFunction.
             // If we can't do that, then we will just run 'eval' instead.
             let maybe_callable = extract_identifier(&children[0])
@@ -69,36 +60,35 @@ fn eval_maybe_mutate_env(
                     } else {
                         None
                     }
-            });
+                });
             if let Some(env_mutating_func) = maybe_callable {
                 env_mutating_func(env, &children[1..])
             } else {
                 eval(env, ast)
             }
         }
-        _ => eval(env, ast)
+        _ => eval(env, ast),
     }
 }
 
-pub fn eval(env: &Environment, ast: &ASTNode) -> Result<Value, String>{
+pub fn eval(env: &Environment, ast: &ASTNode) -> Result<Value, String> {
     match ast {
-        Terminal{token} => {
+        Terminal { token } => {
             let value = Value::parse(token)?;
             Ok(value)
         }
-        Identifier{name} => {
-            resolve_identifier(env, name)
-        }
-        SExpr{children} => {
-            let func_name = eval_expect_callable(
-                env, &children[0])?;
+        Identifier { name } => resolve_identifier(env, name),
+        SExpr { children } => {
+            let func_name = eval_expect_callable(env, &children[0])?;
 
-            let val = eval_function(
-                env, &func_name, &children[1..])?;
+            let val = eval_function(env, &func_name, &children[1..])?;
 
             Ok(val)
         }
-        _ => Err(format!("Found ASTNode {:?} which should've been handled already.", ast))
+        _ => Err(format!(
+            "Found ASTNode {:?} which should've been handled already.",
+            ast
+        )),
     }
 }
 
@@ -107,26 +97,27 @@ fn eval_expect_callable(env: &Environment, arg: &ASTNode) -> Result<Value, Strin
     if value.is_callable() {
         Ok(value)
     } else {
-        Err(
-            format!(
-                "First argument, {:?} to function call is not a \
-                 function value.", arg))
+        Err(format!(
+            "First argument, {:?} to function call is not a \
+                 function value.",
+            arg
+        ))
     }
 }
 
-fn resolve_identifier(
-    env: &Environment, identifier: &str) -> Result<Value, String> {
+fn resolve_identifier(env: &Environment, identifier: &str) -> Result<Value, String> {
     let maybe_value = env.get(identifier);
     if let Some(value) = maybe_value {
         Ok(value.clone())
     } else {
         Err(format!(
-                "Failed to find identifier {:?} in environment.", identifier))
+            "Failed to find identifier {:?} in environment.",
+            identifier
+        ))
     }
 }
 
-fn eval_function(env: &Environment, func: &Value, args: &[ASTNode])
-    -> Result<Value, String> {
+fn eval_function(env: &Environment, func: &Value, args: &[ASTNode]) -> Result<Value, String> {
     match func {
         Value::Closure(closure) => {
             let mut arg_values = Vec::new();
@@ -144,10 +135,7 @@ fn eval_function(env: &Environment, func: &Value, args: &[ASTNode])
             }
             func(env, &arg_values)
         }
-        Value::LazyFunction(func) => {
-            func(env, args)
-        }
-        _ => Err(format!(
-                "Could not evaluate {:?} as a function call.", func))
+        Value::LazyFunction(func) => func(env, args),
+        _ => Err(format!("Could not evaluate {:?} as a function call.", func)),
     }
 }

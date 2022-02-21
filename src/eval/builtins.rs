@@ -1,8 +1,8 @@
 use super::environment::Environment;
+use crate::eval::eval;
+use crate::parser::ASTNode;
 use crate::value::Callable;
 use crate::value::Value;
-use crate::parser::ASTNode;
-use crate::eval::eval;
 
 use text_io::read;
 
@@ -24,16 +24,18 @@ pub fn minus(_env: &Environment, args: &[Value]) -> Result<Value, String> {
 }
 
 fn binary_int_func(
-    name: &str, lhs: &Value, rhs: &Value, func: fn(i64, i64) -> i64
+    name: &str,
+    lhs: &Value,
+    rhs: &Value,
+    func: fn(i64, i64) -> i64,
 ) -> Result<Value, String> {
     match (lhs, rhs) {
-        (Value::Int(lhs_val), Value::Int(rhs_val)) => {
-            Ok(Value::Int(func(*lhs_val, *rhs_val)))
-        }
-        _ => Err(
-            format!(
-                "Expected both args to '{}' to be integers. \
-                 Found {:?} and {:?}.", name, lhs, rhs))
+        (Value::Int(lhs_val), Value::Int(rhs_val)) => Ok(Value::Int(func(*lhs_val, *rhs_val))),
+        _ => Err(format!(
+            "Expected both args to '{}' to be integers. \
+                 Found {:?} and {:?}.",
+            name, lhs, rhs
+        )),
     }
 }
 
@@ -42,13 +44,12 @@ pub fn less_than(_env: &Environment, args: &[Value]) -> Result<Value, String> {
     let lhs = &args[0];
     let rhs = &args[1];
     match (lhs, rhs) {
-        (Value::Int(lhs_val), Value::Int(rhs_val)) => {
-            Ok(Value::Boolean(lhs_val < rhs_val))
-        }
-        _ => Err(
-            format!(
-                "Expected both args to '<' to be integers. \
-                 Found {:?} and {:?}.", lhs, rhs))
+        (Value::Int(lhs_val), Value::Int(rhs_val)) => Ok(Value::Boolean(lhs_val < rhs_val)),
+        _ => Err(format!(
+            "Expected both args to '<' to be integers. \
+                 Found {:?} and {:?}.",
+            lhs, rhs
+        )),
     }
 }
 
@@ -60,7 +61,6 @@ pub fn list(env: &Environment, args: &[ASTNode]) -> Result<Value, String> {
     Ok(Value::List(lst))
 }
 
-
 pub fn let_impl(env: &Environment, args: &[ASTNode]) -> Result<Value, String> {
     // Expect (let <Id> <Value> <body>)
     assert!(args.len() == 3);
@@ -68,7 +68,7 @@ pub fn let_impl(env: &Environment, args: &[ASTNode]) -> Result<Value, String> {
     let bound_value = eval(env, &args[1])?;
     let body_node = &args[2];
 
-    if let ASTNode::Identifier{name} = id_node {
+    if let ASTNode::Identifier { name } = id_node {
         let new_env = env.extend(name, bound_value);
         eval(&new_env, body_node)
     } else {
@@ -92,14 +92,14 @@ pub fn write_impl(env: &Environment, args: &[Value]) -> Result<Value, String> {
     }
 }
 
-pub fn defun(env: &mut Environment, args: &[ASTNode]) -> Result<Value, String>
-{
-    let name = if let ASTNode::Identifier{name} = &args[0] {
+pub fn defun(env: &mut Environment, args: &[ASTNode]) -> Result<Value, String> {
+    let name = if let ASTNode::Identifier { name } = &args[0] {
         Ok(name)
     } else {
         Err(format!(
-                "Expected identifier as first argument to defun. Found {:?}",
-                args[0]))
+            "Expected identifier as first argument to defun. Found {:?}",
+            args[0]
+        ))
     }?;
     let ids = expect_id_list(&args[1])?;
     let body = &args[1..];
@@ -110,14 +110,16 @@ pub fn defun(env: &mut Environment, args: &[ASTNode]) -> Result<Value, String>
 
 fn expect_id_list(node: &ASTNode) -> Result<Vec<String>, String> {
     let mut ids: Vec<String> = Vec::new();
-    if let ASTNode::SExpr{children} = node {
+    if let ASTNode::SExpr { children } = node {
         for id in children {
-            if let ASTNode::Identifier{name} = id {
+            if let ASTNode::Identifier { name } = id {
                 ids.push(name.to_owned());
             } else {
-                return Err(
-                    format!("Found expression in lambda arg list that \
-                             isn't an identifier: {:?}", node));
+                return Err(format!(
+                    "Found expression in lambda arg list that \
+                             isn't an identifier: {:?}",
+                    node
+                ));
             }
         }
     }
@@ -139,17 +141,20 @@ impl ClosureImpl {
     pub fn new_rc(ids: &[String], body: &[ASTNode]) -> std::rc::Rc<ClosureImpl> {
         std::rc::Rc::new(ClosureImpl {
             ids: ids.to_owned(),
-            body: body.to_owned()
+            body: body.to_owned(),
         })
     }
 }
 
 impl Callable for ClosureImpl {
-    fn invoke(
-        &self, env: &Environment, args: &[Value]) -> Result<Value, String> {
-        assert!(self.ids.len() == args.len(),
+    fn invoke(&self, env: &Environment, args: &[Value]) -> Result<Value, String> {
+        assert!(
+            self.ids.len() == args.len(),
             "Invalid number of arguments passed to lambda expression.\n\
-             \tExpected: {}\n\tFound: {}", self.ids.len(), args.len());
+             \tExpected: {}\n\tFound: {}",
+            self.ids.len(),
+            args.len()
+        );
 
         // Create a new environment by binding all the ids to values.
         let mut new_env = env.clone();
@@ -158,9 +163,12 @@ impl Callable for ClosureImpl {
         });
 
         // Evaluate each expression in body with the new environment applied.
-        self.body.iter().map(|expr| eval(&new_env, expr)).last().or_else(|| {
-            Some(Err("Not enough arguments passed to callable.".to_string()))
-        }).unwrap()
+        self.body
+            .iter()
+            .map(|expr| eval(&new_env, expr))
+            .last()
+            .or_else(|| Some(Err("Not enough arguments passed to callable.".to_string())))
+            .unwrap()
     }
 }
 

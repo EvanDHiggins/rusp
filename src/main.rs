@@ -1,15 +1,15 @@
 use std::env;
 use std::fs;
 
-mod parser;
-mod eval;
-mod value;
 mod error;
+mod eval;
 mod lexer;
+mod parser;
+mod value;
 
+use eval::eval_program;
 use lexer::lex;
 use parser::parse;
-use eval::eval_program;
 
 fn main() -> Result<(), error::InterpreterError> {
     let contents = fs::read_to_string(env::args().nth(1).unwrap())?;

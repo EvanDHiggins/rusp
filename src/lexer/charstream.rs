@@ -12,9 +12,9 @@ pub struct StaticCharStream {
 
 impl StaticCharStream {
     pub fn new(input: &str) -> StaticCharStream {
-        StaticCharStream{
+        StaticCharStream {
             buffer: input.chars().collect(),
-            curr: 0
+            curr: 0,
         }
     }
 }

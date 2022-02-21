@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use crate::value::Value;
+use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct Environment {
@@ -8,8 +8,8 @@ pub struct Environment {
 
 impl Environment {
     pub fn new() -> Environment {
-        Environment{
-            value_map: HashMap::new()
+        Environment {
+            value_map: HashMap::new(),
         }
     }
 

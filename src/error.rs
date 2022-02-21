@@ -28,19 +28,18 @@ impl fmt::Debug for InterpreterError {
 
 impl From<String> for InterpreterError {
     fn from(s: String) -> InterpreterError {
-        InterpreterError{
+        InterpreterError {
             kind: "Generic Error".to_owned(),
-            message: s
+            message: s,
         }
     }
 }
 
 impl From<std::io::Error> for InterpreterError {
     fn from(err: std::io::Error) -> InterpreterError {
-        InterpreterError{
+        InterpreterError {
             kind: String::from("io"),
-            message: err.to_string()
+            message: err.to_string(),
         }
     }
 }
-

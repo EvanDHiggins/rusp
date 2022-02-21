@@ -1,8 +1,8 @@
-use crate::lexer::TokenStream;
 use crate::lexer::charstream::CharStream;
+use crate::lexer::charstream::StaticCharStream;
 use crate::lexer::Token;
 use crate::lexer::TokenError;
-use crate::lexer::charstream::StaticCharStream;
+use crate::lexer::TokenStream;
 
 pub struct LazyTokenStream {
     char_stream: Box<dyn CharStream>,
@@ -36,14 +36,13 @@ fn is_identifier_char(c: char) -> bool {
 
 impl LazyTokenStream {
     pub fn new_from_string(s: &str) -> LazyTokenStream {
-        LazyTokenStream{
+        LazyTokenStream {
             char_stream: Box::new(StaticCharStream::new(s)),
-            next_token: Option::None
+            next_token: Option::None,
         }
     }
 
-    fn consume_token_from_input(
-        &mut self) -> Result<Option<Token>, TokenError> {
+    fn consume_token_from_input(&mut self) -> Result<Option<Token>, TokenError> {
         self.consume_whitespace();
         if self.char_stream.peek().is_none() {
             return Ok(Option::None);
@@ -66,7 +65,6 @@ impl LazyTokenStream {
         } else {
             self.consume_identifier().map(Some)
         }
-
     }
 
     fn consume_whitespace(&mut self) {
@@ -82,22 +80,19 @@ impl LazyTokenStream {
     }
 
     fn consume_identifier(&mut self) -> Result<Token, TokenError> {
-        let identifier = self.consume_while(|c| {
-            is_identifier_char(c)
-        })?;
+        let identifier = self.consume_while(|c| is_identifier_char(c))?;
         Ok(Token::Id(identifier))
     }
 
     fn consume_integer(&mut self) -> Result<Token, TokenError> {
-        let literal = self.consume_while(|c| {
-            c.is_ascii_digit()
-        })?.parse::<i64>()?;
+        let literal = self.consume_while(|c| c.is_ascii_digit())?.parse::<i64>()?;
         Ok(Token::IntLiteral(literal))
     }
 
     // Consumes characters, c, from the input until F(c) evaluates to false.
     fn consume_while<F>(&mut self, func: F) -> Result<String, TokenError>
-        where F: Fn(char) -> bool
+    where
+        F: Fn(char) -> bool,
     {
         let mut chars = Vec::new();
         while self.char_stream.peek().map_or(false, &func) {
@@ -105,5 +100,4 @@ impl LazyTokenStream {
         }
         Ok(chars.iter().collect::<String>())
     }
-
 }

@@ -11,17 +11,6 @@ pub trait Callable {
     fn invoke(&self, env: &Environment, args: &[Value]) -> Result<Value, RuntimeError>;
 }
 
-// Trait that defines a function call which is passed an unevaluated AST
-// instead of a list of values. The function is then free to evaluate all or
-// none of the arguments. Think 'if' and 'lambda'.
-pub trait LazyEvaluationCallable {
-    fn invoke(&self, env: &Environment, args: &[ASTNode]) -> Result<Value, String>;
-}
-
-pub trait LazyEvaluationCallableWithMutableEnv {
-    fn invoke(&self, env: &mut Environment, args: &[ASTNode]) -> Result<Value, String>;
-}
-
 #[derive(Clone)]
 pub enum Value {
     Int(i64),

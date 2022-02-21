@@ -62,11 +62,11 @@ fn list_to_str(lst: &[Value]) -> Result<String, String> {
 }
 
 impl Value {
-    pub fn parse(token: &Token) -> Result<Value, String> {
+    pub fn parse(token: &Token) -> Result<Value, RuntimeError> {
         match token {
             Token::IntLiteral(v) => Ok(Value::Int(v.to_owned())),
             Token::StringLiteral(s) => Ok(Value::Str(s.to_owned())),
-            _ => Err(format!("Could not convert token {:?} to Value.", token)),
+            _ => RuntimeError::new(&format!("Could not convert token {:?} to Value.", token)),
         }
     }
 

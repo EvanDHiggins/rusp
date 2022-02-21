@@ -29,11 +29,11 @@ pub fn minus(_env: &Environment, args: &[Value]) -> RuspResult {
 fn binary_int_func(name: &str, lhs: &Value, rhs: &Value, func: fn(i64, i64) -> i64) -> RuspResult {
     match (lhs, rhs) {
         (Value::Int(lhs_val), Value::Int(rhs_val)) => Ok(Value::Int(func(*lhs_val, *rhs_val))),
-        _ => Err(RuntimeError::new(&format!(
+        _ => RuntimeError::new(&format!(
             "Expected both args to '{}' to be integers. \
                  Found {:?} and {:?}.",
             name, lhs, rhs
-        ))),
+        )),
     }
 }
 
@@ -43,11 +43,11 @@ pub fn less_than(_env: &Environment, args: &[Value]) -> RuspResult {
     let rhs = &args[1];
     match (lhs, rhs) {
         (Value::Int(lhs_val), Value::Int(rhs_val)) => Ok(Value::Boolean(lhs_val < rhs_val)),
-        _ => Err(RuntimeError::new(&format!(
+        _ => RuntimeError::new(&format!(
             "Expected both args to '<' to be integers. \
                  Found {:?} and {:?}.",
             lhs, rhs
-        ))),
+        )),
     }
 }
 
@@ -70,11 +70,11 @@ pub fn let_impl(env: &Environment, args: &[ASTNode]) -> RuspResult {
         let new_env = env.extend(name, bound_value);
         eval(&new_env, body_node)
     } else {
-        Err(RuntimeError::new(&format!(
+        RuntimeError::new(&format!(
             "Could not bind identifier in let expression because \
                      first argument was not an identifier. Found: {:?}",
             id_node
-        )))
+        ))
     }
 }
 
@@ -90,10 +90,7 @@ pub fn write_impl(env: &Environment, args: &[Value]) -> RuspResult {
         println!("{}", v);
         Ok(Value::Unit)
     } else {
-        Err(RuntimeError::new(&format!(
-            "Could not print value: {:?}",
-            str_value
-        )))
+        RuntimeError::new(&format!("Could not print value: {:?}", str_value))
     }
 }
 
@@ -173,9 +170,9 @@ impl Callable for ClosureImpl {
             .map(|expr| eval(&new_env, expr))
             .last()
             .or_else(|| {
-                Some(Err(RuntimeError::new(
+                Some(RuntimeError::new(
                     "Not enough arguments passed to callable.",
-                )))
+                ))
             })
             .unwrap()
     }
@@ -190,6 +187,6 @@ pub fn if_impl(env: &Environment, args: &[ASTNode]) -> RuspResult {
             Ok(eval(env, &args[2]).unwrap())
         }
     } else {
-        Err(RuntimeError::new("Could not evaluate value as bool."))
+        RuntimeError::new("Could not evaluate value as bool.")
     }
 }

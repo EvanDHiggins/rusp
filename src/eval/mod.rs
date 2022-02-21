@@ -77,7 +77,7 @@ fn eval_maybe_mutate_env(env: &mut Environment, ast: &ASTNode) -> Result<Value, 
 pub fn eval(env: &Environment, ast: &ASTNode) -> Result<Value, RuntimeError> {
     match ast {
         Terminal { token } => {
-            let value = Value::parse(token).map_err(|msg| RuntimeError::new(&msg))?;
+            let value = Value::parse(token)?;
             Ok(value)
         }
         Identifier { name } => resolve_identifier(env, name),
@@ -88,10 +88,10 @@ pub fn eval(env: &Environment, ast: &ASTNode) -> Result<Value, RuntimeError> {
 
             Ok(val)
         }
-        _ => Err(RuntimeError::new(&format!(
+        _ => RuntimeError::new(&format!(
             "Found ASTNode {:?} which should've been handled already.",
             ast
-        ))),
+        )),
     }
 }
 
@@ -100,11 +100,11 @@ fn eval_expect_callable(env: &Environment, arg: &ASTNode) -> Result<Value, Runti
     if value.is_callable() {
         Ok(value)
     } else {
-        Err(RuntimeError::new(&format!(
+        RuntimeError::new(&format!(
             "First argument, {:?} to function call is not a \
                  function value.",
             arg
-        )))
+        ))
     }
 }
 
@@ -114,10 +114,10 @@ fn resolve_identifier(env: &Environment, identifier: &str) -> Result<Value, Runt
     if let Some(value) = maybe_value {
         Ok(value.clone())
     } else {
-        Err(RuntimeError::new(&format!(
+        RuntimeError::new(&format!(
             "Failed to find identifier {:?} in environment.",
             identifier
-        )))
+        ))
     }
 }
 
@@ -136,9 +136,9 @@ fn eval_function(env: &Environment, func: &Value, args: &[ASTNode]) -> Result<Va
         Value::Closure(closure) => closure.invoke(env, &resolve_args(env, args)?),
         Value::Function(func) => func(env, &resolve_args(env, args)?),
         Value::LazyFunction(func) => func(env, args),
-        _ => Err(RuntimeError::new(&format!(
+        _ => RuntimeError::new(&format!(
             "Could not evaluate {:?} as a function call.",
             func
-        ))),
+        )),
     }
 }

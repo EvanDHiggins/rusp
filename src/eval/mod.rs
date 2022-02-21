@@ -105,6 +105,7 @@ fn eval_expect_callable(env: &Environment, arg: &ASTNode) -> Result<Value, Strin
     }
 }
 
+// Looks up identifier in env and fails if it's not found.
 fn resolve_identifier(env: &Environment, identifier: &str) -> Result<Value, String> {
     let maybe_value = env.get(identifier);
     if let Some(value) = maybe_value {
@@ -117,24 +118,20 @@ fn resolve_identifier(env: &Environment, identifier: &str) -> Result<Value, Stri
     }
 }
 
+// Converts args to a list of Values.
+fn resolve_args(env: &Environment, args: &[ASTNode]) -> Result<Vec<Value>, String> {
+    let mut arg_values = Vec::new();
+    for arg in args {
+        let arg_val = eval(env, arg)?;
+        arg_values.push(arg_val);
+    }
+    Ok(arg_values)
+}
+
 fn eval_function(env: &Environment, func: &Value, args: &[ASTNode]) -> Result<Value, String> {
     match func {
-        Value::Closure(closure) => {
-            let mut arg_values = Vec::new();
-            for arg in args {
-                let arg_val = eval(env, arg)?;
-                arg_values.push(arg_val);
-            }
-            closure.invoke(env, &arg_values)
-        }
-        Value::Function(func) => {
-            let mut arg_values = Vec::new();
-            for arg in args {
-                let arg_val = eval(env, arg)?;
-                arg_values.push(arg_val);
-            }
-            func(env, &arg_values)
-        }
+        Value::Closure(closure) => closure.invoke(env, &resolve_args(env, args)?),
+        Value::Function(func) => func(env, &resolve_args(env, args)?),
         Value::LazyFunction(func) => func(env, args),
         _ => Err(format!("Could not evaluate {:?} as a function call.", func)),
     }

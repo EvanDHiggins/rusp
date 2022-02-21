@@ -1,13 +1,12 @@
 use super::environment::Environment;
 use super::error::RuntimeError;
+use super::RuspResult;
 use crate::eval::eval;
 use crate::eval::value::Callable;
 use crate::eval::value::Value;
 use crate::parser::ASTNode;
 
 use text_io::read;
-
-type RuspResult = Result<Value, RuntimeError>;
 
 pub fn readline(_: &Environment, args: &[Value]) -> RuspResult {
     assert!(args.is_empty());

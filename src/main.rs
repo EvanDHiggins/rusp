@@ -1,3 +1,4 @@
+use crate::rusp::RuspInterpreter;
 use std::env;
 use std::fs;
 
@@ -5,16 +6,11 @@ mod error;
 mod eval;
 mod lexer;
 mod parser;
-
-use eval::eval_program;
-use lexer::lex;
-use parser::parse;
+mod rusp;
 
 fn main() -> Result<(), error::InterpreterError> {
     let contents = fs::read_to_string(env::args().nth(1).unwrap())?;
 
-    let mut tokens = lex(&contents);
-    let ast = parse(&mut *tokens)?;
-    eval_program(&mut eval::default_env(), &ast)?;
-    Ok(())
+    // Run interpreter and throw away return value.
+    RuspInterpreter::new().run(&contents).map(|_| ())
 }

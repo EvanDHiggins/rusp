@@ -11,6 +11,8 @@ use crate::parser::ASTNode::{Identifier, Program, SExpr, Terminal};
 
 use value::Value;
 
+pub type RuspResult = Result<Value, RuntimeError>;
+
 pub fn default_env() -> environment::Environment {
     let mut env = environment::Environment::new();
     env.insert("<", Value::Function(builtins::less_than));

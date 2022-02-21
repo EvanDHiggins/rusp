@@ -80,7 +80,7 @@ impl LazyTokenStream {
     }
 
     fn consume_identifier(&mut self) -> Result<Token, TokenError> {
-        let identifier = self.consume_while(|c| is_identifier_char(c))?;
+        let identifier = self.consume_while(is_identifier_char)?;
         Ok(Token::Id(identifier))
     }
 

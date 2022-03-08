@@ -8,18 +8,18 @@ use crate::parser::ASTNode;
 
 use text_io::read;
 
-pub fn readline(_: &Environment, _: &Context, args: &[Value]) -> RuspResult {
+pub fn readline(_: &Environment, _: &mut Context, args: &[Value]) -> RuspResult {
     assert!(args.is_empty());
     Ok(Value::Str(read!("{}\n")))
 }
 
-pub fn plus(_env: &Environment, _: &Context, args: &[Value]) -> RuspResult {
+pub fn plus(_env: &Environment, _: &mut Context, args: &[Value]) -> RuspResult {
     // Called like: (+ 1 2)
     assert!(args.len() == 2);
     binary_int_func("+", &args[0], &args[1], |x: i64, y: i64| x + y)
 }
 
-pub fn minus(_env: &Environment, _: &Context, args: &[Value]) -> RuspResult {
+pub fn minus(_env: &Environment, _: &mut Context, args: &[Value]) -> RuspResult {
     // Called like: (+ 1 2)
     assert!(args.len() == 2);
     binary_int_func("-", &args[0], &args[1], |x: i64, y: i64| x - y)
@@ -36,7 +36,7 @@ fn binary_int_func(name: &str, lhs: &Value, rhs: &Value, func: fn(i64, i64) -> i
     }
 }
 
-pub fn less_than(_env: &Environment, _: &Context, args: &[Value]) -> RuspResult {
+pub fn less_than(_env: &Environment, _: &mut Context, args: &[Value]) -> RuspResult {
     assert!(args.len() == 2);
     let lhs = &args[0];
     let rhs = &args[1];
@@ -50,7 +50,7 @@ pub fn less_than(_env: &Environment, _: &Context, args: &[Value]) -> RuspResult 
     }
 }
 
-pub fn list(env: &Environment, ctx: &Context, args: &[ASTNode]) -> RuspResult {
+pub fn list(env: &Environment, ctx: &mut Context, args: &[ASTNode]) -> RuspResult {
     let mut lst = Vec::new();
     for arg in args {
         lst.push(eval(env, ctx, arg)?);
@@ -58,7 +58,7 @@ pub fn list(env: &Environment, ctx: &Context, args: &[ASTNode]) -> RuspResult {
     Ok(Value::List(lst))
 }
 
-pub fn let_impl(env: &Environment, ctx: &Context, args: &[ASTNode]) -> RuspResult {
+pub fn let_impl(env: &Environment, ctx: &mut Context, args: &[ASTNode]) -> RuspResult {
     // Expect (let <Id> <Value> <body>)
     assert!(args.len() == 3);
     let id_node = &args[0];
@@ -77,16 +77,16 @@ pub fn let_impl(env: &Environment, ctx: &Context, args: &[ASTNode]) -> RuspResul
     }
 }
 
-pub fn to_str(_: &Environment, _: &Context, args: &[Value]) -> RuspResult {
+pub fn to_str(_: &Environment, _: &mut Context, args: &[Value]) -> RuspResult {
     assert!(args.len() == 1);
     Ok(Value::Str(args[0].runtime_to_str()?))
 }
 
-pub fn write_impl(env: &Environment, ctx: &Context, args: &[Value]) -> RuspResult {
+pub fn write_impl(env: &Environment, ctx: &mut Context, args: &[Value]) -> RuspResult {
     assert!(args.len() == 1);
     let str_value = to_str(env, ctx, args)?;
     if let Value::Str(v) = str_value {
-        println!("{}", v);
+        ctx.stdout.write(v.as_bytes());
         Ok(Value::Unit)
     } else {
         RuntimeError::new(&format!("Could not print value: {:?}", str_value))
@@ -127,7 +127,7 @@ fn expect_id_list(node: &ASTNode) -> Result<Vec<String>, String> {
     Ok(ids)
 }
 
-pub fn lambda(_: &Environment, _: &Context, args: &[ASTNode]) -> RuspResult {
+pub fn lambda(_: &Environment, _: &mut Context, args: &[ASTNode]) -> RuspResult {
     assert!(args.len() == 2);
     let ids = expect_id_list(&args[0])?;
     Ok(Value::Closure(ClosureImpl::new_rc(&ids, args)))
@@ -148,7 +148,7 @@ impl ClosureImpl {
 }
 
 impl Callable for ClosureImpl {
-    fn invoke(&self, env: &Environment, ctx: &Context, args: &[Value]) -> RuspResult {
+    fn invoke(&self, env: &Environment, ctx: &mut Context, args: &[Value]) -> RuspResult {
         assert!(
             self.ids.len() == args.len(),
             "Invalid number of arguments passed to lambda expression.\n\
@@ -177,7 +177,7 @@ impl Callable for ClosureImpl {
     }
 }
 
-pub fn if_impl(env: &Environment, ctx: &Context, args: &[ASTNode]) -> RuspResult {
+pub fn if_impl(env: &Environment, ctx: &mut Context, args: &[ASTNode]) -> RuspResult {
     assert!(args.len() == 3);
     if let Value::Boolean(condition) = eval(env, ctx, &args[0])? {
         if condition {

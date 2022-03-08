@@ -1,6 +1,7 @@
 pub mod builtins;
 pub mod environment;
 pub mod error;
+pub mod io;
 pub mod value;
 
 use environment::Context;
@@ -32,7 +33,7 @@ pub fn default_env() -> environment::Environment {
 
 pub fn eval_program(
     env: &mut Environment,
-    ctx: &Context,
+    ctx: &mut Context,
     ast: &ASTNode,
 ) -> Result<Value, RuntimeError> {
     match ast {
@@ -59,7 +60,7 @@ fn extract_identifier(node: &ASTNode) -> Option<String> {
 // immutable env eval.
 fn eval_maybe_mutate_env(
     env: &mut Environment,
-    ctx: &Context,
+    ctx: &mut Context,
     ast: &ASTNode,
 ) -> Result<Value, RuntimeError> {
     match ast {
@@ -85,7 +86,7 @@ fn eval_maybe_mutate_env(
     }
 }
 
-pub fn eval(env: &Environment, ctx: &Context, ast: &ASTNode) -> Result<Value, RuntimeError> {
+pub fn eval(env: &Environment, ctx: &mut Context, ast: &ASTNode) -> Result<Value, RuntimeError> {
     match ast {
         Terminal { token } => {
             let value = Value::parse(token)?;
@@ -108,7 +109,7 @@ pub fn eval(env: &Environment, ctx: &Context, ast: &ASTNode) -> Result<Value, Ru
 
 fn eval_expect_callable(
     env: &Environment,
-    ctx: &Context,
+    ctx: &mut Context,
     arg: &ASTNode,
 ) -> Result<Value, RuntimeError> {
     let value = eval(env, ctx, arg)?;
@@ -139,7 +140,7 @@ fn resolve_identifier(env: &Environment, identifier: &str) -> Result<Value, Runt
 // Converts args to a list of Values.
 fn resolve_args(
     env: &Environment,
-    ctx: &Context,
+    ctx: &mut Context,
     args: &[ASTNode],
 ) -> Result<Vec<Value>, RuntimeError> {
     let mut arg_values = Vec::new();
@@ -152,13 +153,19 @@ fn resolve_args(
 
 fn eval_function(
     env: &Environment,
-    ctx: &Context,
+    ctx: &mut Context,
     func: &Value,
     args: &[ASTNode],
 ) -> Result<Value, RuntimeError> {
     match func {
-        Value::Closure(closure) => closure.invoke(env, ctx, &resolve_args(env, ctx, args)?),
-        Value::Function(func) => func(env, ctx, &resolve_args(env, ctx, args)?),
+        Value::Closure(closure) => {
+            let args = resolve_args(env, ctx, args)?;
+            closure.invoke(env, ctx, &args)
+        }
+        Value::Function(func) => {
+            let args = resolve_args(env, ctx, args)?;
+            func(env, ctx, &args)
+        }
         Value::LazyFunction(func) => func(env, ctx, args),
         _ => RuntimeError::new(&format!(
             "Could not evaluate {:?} as a function call.",

@@ -11,7 +11,7 @@ pub trait Callable {
     fn invoke(
         &self,
         env: &Environment,
-        ctx: &Context,
+        ctx: &mut Context,
         args: &[Value],
     ) -> Result<Value, RuntimeError>;
 }
@@ -21,8 +21,8 @@ pub enum Value {
     Int(i64),
     Boolean(bool),
     Str(String),
-    Function(fn(&Environment, &Context, &[Value]) -> Result<Value, RuntimeError>),
-    LazyFunction(fn(&Environment, &Context, &[ASTNode]) -> Result<Value, RuntimeError>),
+    Function(fn(&Environment, &mut Context, &[Value]) -> Result<Value, RuntimeError>),
+    LazyFunction(fn(&Environment, &mut Context, &[ASTNode]) -> Result<Value, RuntimeError>),
     EnvMutatingFunction(fn(&mut Environment, &[ASTNode]) -> Result<Value, RuntimeError>),
     Closure(Rc<dyn Callable>),
     List(Vec<Value>),

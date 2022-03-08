@@ -1,11 +1,14 @@
 use super::value::Value;
+use crate::eval::io::IOStream;
 use std::collections::HashMap;
 
-pub struct Context {}
+pub struct Context {
+    pub stdout: IOStream,
+}
 
 impl Context {
-    pub fn new() -> Context {
-        Context {}
+    pub fn new(stdout: IOStream) -> Context {
+        Context { stdout }
     }
 }
 

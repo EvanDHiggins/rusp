@@ -1,4 +1,4 @@
-use crate::eval::environment::Environment;
+use crate::eval::environment::{Context, Environment};
 use crate::eval::error::RuntimeError;
 use crate::lexer::Token;
 use crate::parser::ASTNode;
@@ -8,7 +8,12 @@ use std::rc::Rc;
 // evaluated prior to invoking the actual function. Think things like '<',
 // 'write', etc.
 pub trait Callable {
-    fn invoke(&self, env: &Environment, args: &[Value]) -> Result<Value, RuntimeError>;
+    fn invoke(
+        &self,
+        env: &Environment,
+        ctx: &Context,
+        args: &[Value],
+    ) -> Result<Value, RuntimeError>;
 }
 
 #[derive(Clone)]
@@ -16,8 +21,8 @@ pub enum Value {
     Int(i64),
     Boolean(bool),
     Str(String),
-    Function(fn(&Environment, &[Value]) -> Result<Value, RuntimeError>),
-    LazyFunction(fn(&Environment, &[ASTNode]) -> Result<Value, RuntimeError>),
+    Function(fn(&Environment, &Context, &[Value]) -> Result<Value, RuntimeError>),
+    LazyFunction(fn(&Environment, &Context, &[ASTNode]) -> Result<Value, RuntimeError>),
     EnvMutatingFunction(fn(&mut Environment, &[ASTNode]) -> Result<Value, RuntimeError>),
     Closure(Rc<dyn Callable>),
     List(Vec<Value>),

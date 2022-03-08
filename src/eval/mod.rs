@@ -3,6 +3,7 @@ pub mod environment;
 pub mod error;
 pub mod value;
 
+use environment::Context;
 use environment::Environment;
 use error::RuntimeError;
 
@@ -29,15 +30,19 @@ pub fn default_env() -> environment::Environment {
     env
 }
 
-pub fn eval_program(env: &mut Environment, ast: &ASTNode) -> Result<Value, RuntimeError> {
+pub fn eval_program(
+    env: &mut Environment,
+    ctx: &Context,
+    ast: &ASTNode,
+) -> Result<Value, RuntimeError> {
     match ast {
         Program { statements } => {
             for statement in statements {
-                eval_program(env, statement)?;
+                eval_program(env, ctx, statement)?;
             }
             Ok(Value::Unit)
         }
-        node => eval_maybe_mutate_env(env, node),
+        node => eval_maybe_mutate_env(env, ctx, node),
     }
 }
 
@@ -52,7 +57,11 @@ fn extract_identifier(node: &ASTNode) -> Option<String> {
 // We first check if ast represents a callable which needs to mutate its passed
 // environment. This is narrowly for 'defun'. Otherwise we delegate to the
 // immutable env eval.
-fn eval_maybe_mutate_env(env: &mut Environment, ast: &ASTNode) -> Result<Value, RuntimeError> {
+fn eval_maybe_mutate_env(
+    env: &mut Environment,
+    ctx: &Context,
+    ast: &ASTNode,
+) -> Result<Value, RuntimeError> {
     match ast {
         SExpr { children } => {
             // Try to lookup the first element of ast as an EnvMutatingFunction.
@@ -69,14 +78,14 @@ fn eval_maybe_mutate_env(env: &mut Environment, ast: &ASTNode) -> Result<Value, 
             if let Some(env_mutating_func) = maybe_callable {
                 env_mutating_func(env, &children[1..])
             } else {
-                eval(env, ast)
+                eval(env, ctx, ast)
             }
         }
-        _ => eval(env, ast),
+        _ => eval(env, ctx, ast),
     }
 }
 
-pub fn eval(env: &Environment, ast: &ASTNode) -> Result<Value, RuntimeError> {
+pub fn eval(env: &Environment, ctx: &Context, ast: &ASTNode) -> Result<Value, RuntimeError> {
     match ast {
         Terminal { token } => {
             let value = Value::parse(token)?;
@@ -84,9 +93,9 @@ pub fn eval(env: &Environment, ast: &ASTNode) -> Result<Value, RuntimeError> {
         }
         Identifier { name } => resolve_identifier(env, name),
         SExpr { children } => {
-            let func_name = eval_expect_callable(env, &children[0])?;
+            let func_name = eval_expect_callable(env, ctx, &children[0])?;
 
-            let val = eval_function(env, &func_name, &children[1..])?;
+            let val = eval_function(env, ctx, &func_name, &children[1..])?;
 
             Ok(val)
         }
@@ -97,8 +106,12 @@ pub fn eval(env: &Environment, ast: &ASTNode) -> Result<Value, RuntimeError> {
     }
 }
 
-fn eval_expect_callable(env: &Environment, arg: &ASTNode) -> Result<Value, RuntimeError> {
-    let value = eval(env, arg)?;
+fn eval_expect_callable(
+    env: &Environment,
+    ctx: &Context,
+    arg: &ASTNode,
+) -> Result<Value, RuntimeError> {
+    let value = eval(env, ctx, arg)?;
     if value.is_callable() {
         Ok(value)
     } else {
@@ -124,20 +137,29 @@ fn resolve_identifier(env: &Environment, identifier: &str) -> Result<Value, Runt
 }
 
 // Converts args to a list of Values.
-fn resolve_args(env: &Environment, args: &[ASTNode]) -> Result<Vec<Value>, RuntimeError> {
+fn resolve_args(
+    env: &Environment,
+    ctx: &Context,
+    args: &[ASTNode],
+) -> Result<Vec<Value>, RuntimeError> {
     let mut arg_values = Vec::new();
     for arg in args {
-        let arg_val = eval(env, arg)?;
+        let arg_val = eval(env, ctx, arg)?;
         arg_values.push(arg_val);
     }
     Ok(arg_values)
 }
 
-fn eval_function(env: &Environment, func: &Value, args: &[ASTNode]) -> Result<Value, RuntimeError> {
+fn eval_function(
+    env: &Environment,
+    ctx: &Context,
+    func: &Value,
+    args: &[ASTNode],
+) -> Result<Value, RuntimeError> {
     match func {
-        Value::Closure(closure) => closure.invoke(env, &resolve_args(env, args)?),
-        Value::Function(func) => func(env, &resolve_args(env, args)?),
-        Value::LazyFunction(func) => func(env, args),
+        Value::Closure(closure) => closure.invoke(env, ctx, &resolve_args(env, ctx, args)?),
+        Value::Function(func) => func(env, ctx, &resolve_args(env, ctx, args)?),
+        Value::LazyFunction(func) => func(env, ctx, args),
         _ => RuntimeError::new(&format!(
             "Could not evaluate {:?} as a function call.",
             func

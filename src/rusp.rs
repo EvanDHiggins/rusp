@@ -1,5 +1,6 @@
 use crate::error::InterpreterError;
 use crate::eval::default_env;
+use crate::eval::environment::Context;
 use crate::eval::eval_program;
 use crate::eval::value::Value;
 use crate::lexer::lex;
@@ -18,7 +19,7 @@ impl RuspInterpreter {
 
         // I'm not sure why this is needed. We have a proper From defined for
         // this conversion, but something is preventing this file from seeing it.
-        eval_program(&mut default_env(), &ast)
+        eval_program(&mut default_env(), &Context::new(), &ast)
             .map_err(|re| InterpreterError::new("RuntimeError", &re.message))
     }
 }

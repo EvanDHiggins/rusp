@@ -1,6 +1,14 @@
 use super::value::Value;
 use std::collections::HashMap;
 
+pub struct Context {}
+
+impl Context {
+    pub fn new() -> Context {
+        Context {}
+    }
+}
+
 #[derive(Clone)]
 pub struct Environment {
     value_map: HashMap<String, Value>,
